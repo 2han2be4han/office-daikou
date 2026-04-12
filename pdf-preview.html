@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF プレビュー - Office DAIKOU</title>
+  <style>
+    body {
+      background: #888;
+      margin: 0;
+      padding: 24px;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+
+    .pdf-frame {
+      max-width: 680px;
+      margin: 0 auto;
+      background: #fff;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .pdf-label {
+      text-align: center;
+      color: #fff;
+      font-size: 13px;
+      margin-bottom: 12px;
+      opacity: 0.7;
+    }
+
+    /* ===== 以下、Code.gsのPDFテンプレートと同じCSS ===== */
+    .pdf-body {
+      font-family: 'Noto Sans JP', sans-serif;
+      padding: 40px;
+      color: #1e293b;
+    }
+
+    .pdf-body h1 {
+      font-size: 24px;
+      text-align: center;
+      margin-bottom: 8px;
+      color: #1a2744;
+    }
+
+    .pdf-body .meta {
+      text-align: center;
+      color: #64748b;
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+
+    .pdf-body .company {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 24px;
+    }
+
+    .pdf-body table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .pdf-body th {
+      background: #1a2744;
+      color: white;
+      padding: 8px 10px;
+      text-align: left;
+    }
+
+    .pdf-body th:last-child { text-align: right; }
+
+    .pdf-body td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .pdf-body .right { text-align: right; }
+
+    .pdf-body .total {
+      text-align: right;
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 2px solid #1a2744;
+    }
+
+    .pdf-body .footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <p class="pdf-label">現在のPDF出力プレビュー（実際にメール添付されるPDFと同じ内容）</p>
+  <div class="pdf-frame">
+    <div class="pdf-body">
+      <h1>請求書</h1>
+      <p class="meta">2026年3月分</p>
+      <p class="company">サンプル建設株式会社 御中</p>
+      <table>
+        <thead>
+          <tr>
+            <th>日付</th>
+            <th>現場名</th>
+            <th>人数</th>
+            <th>単価</th>
+            <th>高速代</th>
+            <th style="text-align:right">小計</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>3/3</td>
+            <td>○○マンション新築工事</td>
+            <td class="right">3</td>
+            <td class="right">¥18,000</td>
+            <td class="right">¥1,200</td>
+            <td class="right">¥55,200</td>
+          </tr>
+          <tr>
+            <td>3/5</td>
+            <td>○○マンション新築工事</td>
+            <td class="right">2</td>
+            <td class="right">¥18,000</td>
+            <td class="right">¥1,200</td>
+            <td class="right">¥37,200</td>
+          </tr>
+          <tr>
+            <td>3/10</td>
+            <td>△△ビル改修工事</td>
+            <td class="right">4</td>
+            <td class="right">¥20,000</td>
+            <td class="right">¥0</td>
+            <td class="right">¥80,000</td>
+          </tr>
+          <tr>
+            <td>3/15</td>
+            <td>○○マンション新築工事</td>
+            <td class="right">3</td>
+            <td class="right">¥18,000</td>
+            <td class="right">¥1,200</td>
+            <td class="right">¥55,200</td>
+          </tr>
+          <tr>
+            <td>3/22</td>
+            <td>□□倉庫解体工事</td>
+            <td class="right">5</td>
+            <td class="right">¥17,000</td>
+            <td class="right">¥2,400</td>
+            <td class="right">¥87,400</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="total">合計金額: ¥315,000</p>
+      <p class="footer">Office DAIKOU（大晃工業合同会社）</p>
+    </div>
+  </div>
+</body>
+</html>
