@@ -475,6 +475,181 @@
       pointer-events: none;
     }
 
+    /* ===== Drum Picker ===== */
+    .drum-picker-trigger {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      font-family: var(--font-family);
+      color: var(--color-text);
+      background: var(--color-white);
+      transition: var(--transition);
+      outline: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      -webkit-appearance: none;
+      user-select: none;
+    }
+
+    .drum-picker-trigger:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .drum-picker-trigger .placeholder {
+      color: var(--color-text-light);
+    }
+
+    .drum-picker-trigger .arrow {
+      color: var(--color-text-light);
+      font-size: 12px;
+      transition: var(--transition);
+    }
+
+    .drum-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 300;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      animation: overlayIn 0.2s ease-out;
+    }
+
+    .drum-overlay.open {
+      display: flex;
+    }
+
+    @keyframes overlayIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .drum-panel {
+      background: var(--color-white);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      width: 100%;
+      max-width: 480px;
+      padding: 0 0 env(safe-area-inset-bottom, 0);
+      animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .drum-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .drum-header-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-navy);
+    }
+
+    .drum-header-btn {
+      background: none;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: var(--font-family);
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+    }
+
+    .drum-cancel {
+      color: var(--color-text-sub);
+    }
+
+    .drum-done {
+      color: var(--color-primary);
+    }
+
+    .drum-done:hover {
+      background: var(--color-primary-light);
+    }
+
+    .drum-body {
+      position: relative;
+      height: 200px;
+      overflow: hidden;
+    }
+
+    .drum-body::before,
+    .drum-body::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 80px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .drum-body::before {
+      top: 0;
+      background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+    }
+
+    .drum-body::after {
+      bottom: 0;
+      background: linear-gradient(to top, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+    }
+
+    .drum-highlight {
+      position: absolute;
+      top: 50%;
+      left: 16px;
+      right: 16px;
+      height: 40px;
+      transform: translateY(-50%);
+      background: var(--color-primary-light);
+      border-radius: var(--radius-sm);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .drum-scroll {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 3;
+      touch-action: pan-y;
+    }
+
+    .drum-item {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--color-text-sub);
+      transition: color 0.15s, transform 0.15s;
+      user-select: none;
+      cursor: pointer;
+    }
+
+    .drum-item.selected {
+      color: var(--color-navy);
+      font-weight: 700;
+      transform: scale(1.1);
+    }
+
     /* Submit button */
     .form-submit {
       width: 100%;
@@ -807,13 +982,14 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="inputWorkers">
+            <label class="form-label">
               人数
               <span class="required">必須</span>
             </label>
-            <div class="input-with-unit">
-              <input type="number" id="inputWorkers" class="form-input" placeholder="0" required min="1" step="1">
-              <span class="input-unit">人</span>
+            <input type="hidden" id="inputWorkers" required>
+            <div class="drum-picker-trigger" id="workersTrigger" onclick="openDrumPicker()" tabindex="0" role="button">
+              <span id="workersDisplay" class="placeholder">選択してください</span>
+              <span class="arrow">▼</span>
             </div>
           </div>
 
@@ -854,6 +1030,21 @@
       <p class="footer-company">大晃工業合同会社</p>
       <p>&copy; 2026 Office DAIKOU. All rights reserved.</p>
     </footer>
+  </div>
+
+  <!-- ===== Drum Picker ===== -->
+  <div class="drum-overlay" id="drumOverlay" onclick="onDrumOverlayClick(event)">
+    <div class="drum-panel">
+      <div class="drum-header">
+        <button class="drum-header-btn drum-cancel" onclick="closeDrumPicker()">キャンセル</button>
+        <span class="drum-header-title">人数を選択</span>
+        <button class="drum-header-btn drum-done" onclick="confirmDrumPicker()">決定</button>
+      </div>
+      <div class="drum-body">
+        <div class="drum-highlight"></div>
+        <div class="drum-scroll" id="drumScroll"></div>
+      </div>
+    </div>
   </div>
 
   <!-- ===== Toast ===== -->
@@ -1000,8 +1191,13 @@
         return;
       }
 
-      if (data.workers < 1 || data.rate < 1) {
-        showToast('人数と単価は1以上を入力してください', 'error');
+      if (!data.workers || data.workers < 1) {
+        showToast('人数を選択してください', 'error');
+        return;
+      }
+
+      if (data.rate < 1) {
+        showToast('単価は1以上を入力してください', 'error');
         return;
       }
 
@@ -1059,6 +1255,11 @@
       document.getElementById('inputWorkers').value = '';
       document.getElementById('inputRate').value = '';
       document.getElementById('inputHighway').value = '';
+      // ドラムピッカーもリセット
+      drumSelected = null;
+      const display = document.getElementById('workersDisplay');
+      display.textContent = '選択してください';
+      display.classList.add('placeholder');
       // 年月は維持
       document.getElementById('inputYear').value = now.getFullYear();
       document.getElementById('inputMonth').value = now.getMonth() + 1;
@@ -1072,6 +1273,225 @@
       document.getElementById('authError').textContent = '';
       document.getElementById('authPassword').classList.remove('error');
       showScreen('auth');
+    }
+
+    // ===== Drum Picker =====
+    const DRUM_MIN = 1;
+    const DRUM_MAX = 30;
+    const DRUM_ITEM_H = 40;
+    const DRUM_VISIBLE = 5; // items visible in viewport
+    let drumY = 0;
+    let drumSelected = null;
+    let drumTouchStartY = 0;
+    let drumStartOffset = 0;
+    let drumMomentum = 0;
+    let drumLastY = 0;
+    let drumLastTime = 0;
+    let drumAnimFrame = null;
+
+    function buildDrumItems() {
+      const scroll = document.getElementById('drumScroll');
+      scroll.innerHTML = '';
+      // padding items top/bottom so the first/last can be centered
+      const pad = Math.floor(DRUM_VISIBLE / 2);
+      for (let i = 0; i < pad; i++) {
+        const div = document.createElement('div');
+        div.className = 'drum-item';
+        div.innerHTML = '&nbsp;';
+        scroll.appendChild(div);
+      }
+      for (let n = DRUM_MIN; n <= DRUM_MAX; n++) {
+        const div = document.createElement('div');
+        div.className = 'drum-item';
+        div.textContent = n + ' 人';
+        div.dataset.value = n;
+        div.onclick = () => snapToValue(n);
+        scroll.appendChild(div);
+      }
+      for (let i = 0; i < pad; i++) {
+        const div = document.createElement('div');
+        div.className = 'drum-item';
+        div.innerHTML = '&nbsp;';
+        scroll.appendChild(div);
+      }
+    }
+
+    function openDrumPicker() {
+      buildDrumItems();
+      const overlay = document.getElementById('drumOverlay');
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      const current = drumSelected || 1;
+      drumY = -((current - DRUM_MIN) * DRUM_ITEM_H);
+      applyDrumPosition(false);
+      updateDrumHighlight();
+
+      // Touch events
+      const scroll = document.getElementById('drumScroll');
+      scroll.addEventListener('touchstart', onDrumTouchStart, { passive: false });
+      scroll.addEventListener('touchmove', onDrumTouchMove, { passive: false });
+      scroll.addEventListener('touchend', onDrumTouchEnd);
+      // Mouse events for desktop
+      scroll.addEventListener('mousedown', onDrumMouseDown);
+    }
+
+    function closeDrumPicker() {
+      const overlay = document.getElementById('drumOverlay');
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      cancelAnimationFrame(drumAnimFrame);
+      cleanupDrumMouse();
+    }
+
+    function confirmDrumPicker() {
+      const idx = Math.round(-drumY / DRUM_ITEM_H);
+      const val = Math.max(DRUM_MIN, Math.min(DRUM_MAX, idx + DRUM_MIN));
+      drumSelected = val;
+      document.getElementById('inputWorkers').value = val;
+      const display = document.getElementById('workersDisplay');
+      display.textContent = val + ' 人';
+      display.classList.remove('placeholder');
+      closeDrumPicker();
+    }
+
+    function onDrumOverlayClick(e) {
+      if (e.target.classList.contains('drum-overlay')) closeDrumPicker();
+    }
+
+    function applyDrumPosition(smooth) {
+      const scroll = document.getElementById('drumScroll');
+      const padTop = Math.floor(DRUM_VISIBLE / 2) * DRUM_ITEM_H;
+      const tx = drumY + padTop;
+      scroll.style.transition = smooth ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none';
+      scroll.style.transform = `translateY(${tx}px)`;
+    }
+
+    function snapToNearest(smooth) {
+      const maxIdx = DRUM_MAX - DRUM_MIN;
+      let idx = Math.round(-drumY / DRUM_ITEM_H);
+      idx = Math.max(0, Math.min(maxIdx, idx));
+      drumY = -(idx * DRUM_ITEM_H);
+      applyDrumPosition(smooth !== false);
+      updateDrumHighlight();
+    }
+
+    function snapToValue(val) {
+      drumY = -((val - DRUM_MIN) * DRUM_ITEM_H);
+      applyDrumPosition(true);
+      updateDrumHighlight();
+    }
+
+    function updateDrumHighlight() {
+      const idx = Math.round(-drumY / DRUM_ITEM_H);
+      const val = idx + DRUM_MIN;
+      document.querySelectorAll('.drum-item').forEach(el => {
+        el.classList.toggle('selected', parseInt(el.dataset.value) === val);
+      });
+    }
+
+    // Touch handling
+    function onDrumTouchStart(e) {
+      cancelAnimationFrame(drumAnimFrame);
+      drumTouchStartY = e.touches[0].clientY;
+      drumStartOffset = drumY;
+      drumLastY = drumTouchStartY;
+      drumLastTime = Date.now();
+      drumMomentum = 0;
+    }
+
+    function onDrumTouchMove(e) {
+      e.preventDefault();
+      const curY = e.touches[0].clientY;
+      const delta = curY - drumTouchStartY;
+      drumY = drumStartOffset + delta;
+
+      // Clamp with rubber-band
+      const minY = -((DRUM_MAX - DRUM_MIN) * DRUM_ITEM_H);
+      if (drumY > 0) drumY = drumY * 0.3;
+      if (drumY < minY) drumY = minY + (drumY - minY) * 0.3;
+
+      applyDrumPosition(false);
+      updateDrumHighlight();
+
+      const now = Date.now();
+      const dt = now - drumLastTime;
+      if (dt > 0) {
+        drumMomentum = (curY - drumLastY) / dt;
+      }
+      drumLastY = curY;
+      drumLastTime = now;
+    }
+
+    function onDrumTouchEnd() {
+      if (Math.abs(drumMomentum) > 0.3) {
+        animateMomentum();
+      } else {
+        snapToNearest();
+      }
+    }
+
+    // Mouse handling (desktop)
+    function onDrumMouseDown(e) {
+      e.preventDefault();
+      cancelAnimationFrame(drumAnimFrame);
+      drumTouchStartY = e.clientY;
+      drumStartOffset = drumY;
+      drumLastY = e.clientY;
+      drumLastTime = Date.now();
+      drumMomentum = 0;
+      document.addEventListener('mousemove', onDrumMouseMove);
+      document.addEventListener('mouseup', onDrumMouseUp);
+    }
+
+    function onDrumMouseMove(e) {
+      const curY = e.clientY;
+      const delta = curY - drumTouchStartY;
+      drumY = drumStartOffset + delta;
+      const minY = -((DRUM_MAX - DRUM_MIN) * DRUM_ITEM_H);
+      if (drumY > 0) drumY = drumY * 0.3;
+      if (drumY < minY) drumY = minY + (drumY - minY) * 0.3;
+      applyDrumPosition(false);
+      updateDrumHighlight();
+      const now = Date.now();
+      const dt = now - drumLastTime;
+      if (dt > 0) drumMomentum = (curY - drumLastY) / dt;
+      drumLastY = curY;
+      drumLastTime = now;
+    }
+
+    function onDrumMouseUp() {
+      cleanupDrumMouse();
+      if (Math.abs(drumMomentum) > 0.3) {
+        animateMomentum();
+      } else {
+        snapToNearest();
+      }
+    }
+
+    function cleanupDrumMouse() {
+      document.removeEventListener('mousemove', onDrumMouseMove);
+      document.removeEventListener('mouseup', onDrumMouseUp);
+    }
+
+    function animateMomentum() {
+      const friction = 0.95;
+      const minY = -((DRUM_MAX - DRUM_MIN) * DRUM_ITEM_H);
+
+      function step() {
+        drumMomentum *= friction;
+        drumY += drumMomentum * 16;
+        if (drumY > 0) { drumY = 0; drumMomentum = 0; }
+        if (drumY < minY) { drumY = minY; drumMomentum = 0; }
+        applyDrumPosition(false);
+        updateDrumHighlight();
+        if (Math.abs(drumMomentum) > 0.01) {
+          drumAnimFrame = requestAnimationFrame(step);
+        } else {
+          snapToNearest();
+        }
+      }
+      drumAnimFrame = requestAnimationFrame(step);
     }
 
     // ===== Toast =====
