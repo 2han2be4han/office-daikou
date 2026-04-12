@@ -6,43 +6,34 @@
   <title>請求書 - Office DAIKOU</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --color-navy: #1a2744;
-      --color-primary: #2563eb;
-      --color-primary-hover: #1d4ed8;
-      --color-primary-light: #dbeafe;
-      --color-accent: #f59e0b;
-      --color-white: #ffffff;
-      --color-bg-light: #f8fafc;
-      --color-text: #1e293b;
-      --color-text-sub: #64748b;
-      --color-text-light: #94a3b8;
-      --color-border: #e2e8f0;
-      --color-success: #10b981;
-      --color-error: #ef4444;
-      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
-      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
-      --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04);
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 16px;
-      --radius-xl: 24px;
-      --font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --bg: #f5f0ea;
+      --bg-white: #ffffff;
+      --text: #222222;
+      --text-sub: #888880;
+      --text-light: #b0aba3;
+      --accent: #e07830;
+      --green: #3a8a5c;
+      --green-light: #e8f5ee;
+      --green-border: #b0d4be;
+      --black: #222222;
+      --border: #e0dbd4;
+      --border-light: #ece8e2;
+      --error: #d44;
+      --shadow-card: 0 2px 12px rgba(0,0,0,0.04);
+      --radius: 8px;
+      --radius-lg: 14px;
+      --font: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
     }
 
     body {
-      font-family: var(--font-family);
-      color: var(--color-text);
-      background: var(--color-bg-light);
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
       line-height: 1.8;
       font-size: 15px;
       -webkit-font-smoothing: antialiased;
@@ -50,141 +41,106 @@
 
     /* Header */
     .header {
-      background: var(--color-navy);
-      padding: 0 24px;
-      height: 60px;
+      background: rgba(245, 240, 234, 0.92);
+      backdrop-filter: blur(12px);
+      padding: 0 20px;
+      height: 56px;
       display: flex;
       align-items: center;
+      border-bottom: 1px solid var(--border-light);
     }
 
     .header-logo {
       display: flex;
-      align-items: center;
-      gap: 10px;
+      align-items: baseline;
+      gap: 6px;
       text-decoration: none;
-      color: var(--color-white);
-    }
-
-    .header-logo-icon {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-      border-radius: var(--radius-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 16px;
-      color: var(--color-white);
-    }
-
-    .header-logo-text {
-      font-size: 16px;
-      font-weight: 700;
-    }
-
-    .header-logo-sub {
-      font-size: 10px;
-      font-weight: 300;
-      color: var(--color-text-light);
-      display: block;
-      line-height: 1.2;
-      margin-top: -2px;
-    }
-
-    /* Invoice hero */
-    .invoice-hero {
-      background: linear-gradient(135deg, var(--color-navy), #1e3a5f);
-      padding: 32px 24px 48px;
-      color: var(--color-white);
-      text-align: center;
-      position: relative;
-    }
-
-    .invoice-hero::after {
-      content: '';
-      position: absolute;
-      bottom: -1px;
-      left: 0;
-      right: 0;
-      height: 24px;
-      background: var(--color-bg-light);
-      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-    }
-
-    .invoice-hero-title {
+      color: var(--text);
       font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 4px;
+      font-weight: 900;
+      letter-spacing: 1px;
     }
 
-    .invoice-hero-meta {
-      font-size: 14px;
-      color: rgba(255,255,255,0.7);
-    }
+    .header-logo .o { color: var(--accent); }
 
-    /* Invoice container */
-    .invoice-container {
+    /* Page */
+    .page-header {
+      padding: 28px 20px 20px;
       max-width: 720px;
-      margin: -12px auto 0;
+      margin: 0 auto;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+    }
+
+    .page-meta {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-top: 4px;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
       padding: 0 20px 40px;
-      position: relative;
-      z-index: 1;
     }
 
-    .invoice-card {
-      background: var(--color-white);
+    .card {
+      background: var(--bg-white);
       border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-lg);
-      padding: 32px 28px;
-      animation: fadeInUp 0.5s ease-out;
+      box-shadow: var(--shadow-card);
+      padding: 28px 24px;
+      animation: fadeUp 0.4s ease-out;
     }
 
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Invoice header info */
+    /* Invoice info */
     .invoice-info {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 28px;
-      padding-bottom: 20px;
-      border-bottom: 2px solid var(--color-primary-light);
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-light);
     }
 
-    .invoice-info-left h3 {
+    .invoice-info h3 {
       font-size: 18px;
       font-weight: 700;
-      color: var(--color-navy);
-      margin-bottom: 4px;
     }
 
-    .invoice-info-left p {
+    .invoice-info p {
       font-size: 13px;
-      color: var(--color-text-sub);
+      color: var(--text-sub);
     }
 
-    .invoice-stamp {
-      background: var(--color-primary-light);
-      color: var(--color-primary);
-      padding: 6px 16px;
-      border-radius: var(--radius-sm);
-      font-size: 13px;
+    .status-tag {
+      font-size: 12px;
       font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 4px;
+      border: 1.5px solid var(--border);
+      color: var(--text-sub);
+      white-space: nowrap;
     }
 
-    .invoice-stamp.approved {
-      background: #d1fae5;
-      color: var(--color-success);
+    .status-tag.approved {
+      border-color: var(--green-border);
+      color: var(--green);
+      background: var(--green-light);
     }
 
     /* Table */
-    .invoice-table-wrap {
+    .table-wrap {
       overflow-x: auto;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       -webkit-overflow-scrolling: touch;
     }
 
@@ -192,12 +148,12 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 14px;
-      min-width: 520px;
+      min-width: 500px;
     }
 
     .invoice-table thead th {
-      background: var(--color-navy);
-      color: var(--color-white);
+      background: var(--black);
+      color: #fff;
       font-weight: 500;
       font-size: 12px;
       padding: 10px 12px;
@@ -205,142 +161,110 @@
       white-space: nowrap;
     }
 
-    .invoice-table thead th:first-child {
-      border-radius: var(--radius-sm) 0 0 0;
-    }
-
-    .invoice-table thead th:last-child {
-      border-radius: 0 var(--radius-sm) 0 0;
-      text-align: right;
-    }
+    .invoice-table thead th:first-child { border-radius: var(--radius) 0 0 0; }
+    .invoice-table thead th:last-child { border-radius: 0 var(--radius) 0 0; text-align: right; }
 
     .invoice-table tbody td {
       padding: 10px 12px;
-      border-bottom: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--border-light);
       white-space: nowrap;
     }
 
-    .invoice-table tbody tr:hover {
-      background: var(--color-bg-light);
-    }
+    .invoice-table tbody tr:hover { background: #faf8f5; }
+    .invoice-table .r { text-align: right; font-variant-numeric: tabular-nums; }
 
-    .invoice-table .text-right {
-      text-align: right;
-    }
-
-    .invoice-table .num {
-      font-variant-numeric: tabular-nums;
-    }
-
-    /* Total row */
-    .invoice-total {
+    /* Total */
+    .total-row {
       display: flex;
       justify-content: flex-end;
       align-items: center;
-      gap: 24px;
-      padding: 20px 0;
-      border-top: 2px solid var(--color-navy);
+      gap: 20px;
+      padding-top: 16px;
+      border-top: 2px solid var(--black);
       margin-top: 4px;
     }
 
-    .invoice-total-label {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--color-text-sub);
-    }
+    .total-label { font-size: 14px; font-weight: 600; color: var(--text-sub); }
 
-    .invoice-total-amount {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--color-navy);
+    .total-amount {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--text);
       font-variant-numeric: tabular-nums;
     }
 
-    .invoice-total-amount small {
-      font-size: 16px;
-      font-weight: 500;
-    }
+    .total-amount small { font-size: 14px; font-weight: 500; }
 
     /* Actions */
-    .invoice-actions {
-      margin-top: 28px;
-      text-align: center;
-    }
+    .actions { margin-top: 24px; text-align: center; }
 
     .btn-approve {
       display: inline-flex;
       align-items: center;
       gap: 8px;
       padding: 14px 48px;
-      background: linear-gradient(135deg, var(--color-success), #059669);
-      color: var(--color-white);
+      background: var(--black);
+      color: #fff;
       border: none;
-      border-radius: var(--radius-md);
-      font-size: 16px;
+      border-radius: var(--radius);
+      font-size: 15px;
       font-weight: 600;
-      font-family: var(--font-family);
+      font-family: var(--font);
       cursor: pointer;
-      transition: var(--transition);
+      transition: 0.2s;
     }
 
-    .btn-approve:hover {
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-      transform: translateY(-1px);
-    }
+    .btn-approve:hover { opacity: 0.85; }
+    .btn-approve:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    .btn-approve:active {
-      transform: translateY(0);
-    }
-
-    .btn-approve:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-
-    .btn-approve svg {
-      width: 20px;
-      height: 20px;
-    }
-
-    .approved-message {
+    .approved-msg {
       display: none;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      padding: 16px 24px;
-      background: #d1fae5;
-      color: #065f46;
-      border-radius: var(--radius-md);
-      font-size: 15px;
+      gap: 8px;
+      padding: 14px 20px;
+      background: var(--green-light);
+      color: var(--green);
+      border: 1.5px solid var(--green-border);
+      border-radius: var(--radius);
+      font-size: 14px;
       font-weight: 600;
     }
 
-    .approved-message.show {
-      display: flex;
+    .approved-msg.show { display: flex; }
+
+    /* Loading */
+    .loading { text-align: center; padding: 60px 20px; color: var(--text-sub); }
+
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin: 0 auto 12px;
     }
 
-    .approved-message svg {
-      width: 22px;
-      height: 22px;
+    .spinner-sm {
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: inline-block;
     }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Footer */
     .footer {
-      background: var(--color-navy);
-      color: rgba(255,255,255,0.5);
       text-align: center;
-      padding: 24px;
-      font-size: 12px;
+      padding: 32px 20px;
+      font-size: 11px;
+      color: var(--text-light);
     }
 
-    .footer-company {
-      color: rgba(255,255,255,0.7);
-      font-weight: 500;
-      margin-bottom: 4px;
-      font-size: 13px;
-    }
+    .footer-company { font-size: 12px; color: var(--text-sub); font-weight: 500; margin-bottom: 2px; }
 
     /* Toast */
     .toast {
@@ -348,359 +272,181 @@
       bottom: 24px;
       left: 50%;
       transform: translateX(-50%) translateY(100px);
-      background: var(--color-navy);
-      color: var(--color-white);
       padding: 14px 24px;
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-xl);
+      border-radius: 50px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
       font-size: 14px;
       font-weight: 500;
       z-index: 200;
-      display: flex;
-      align-items: center;
-      gap: 10px;
       transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      max-width: calc(100vw - 48px);
+      max-width: calc(100vw - 40px);
     }
 
-    .toast.show {
-      transform: translateX(-50%) translateY(0);
-    }
-
-    .toast.success { background: var(--color-success); }
-    .toast.error { background: var(--color-error); }
-
-    .spinner {
-      width: 18px;
-      height: 18px;
-      border: 2.5px solid rgba(255,255,255,0.3);
-      border-top-color: var(--color-white);
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-      display: inline-block;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* Loading state */
-    .loading-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--color-text-sub);
-    }
-
-    .loading-state .spinner {
-      width: 32px;
-      height: 32px;
-      border-color: var(--color-border);
-      border-top-color: var(--color-primary);
-      margin: 0 auto 16px;
-    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { background: var(--green); color: #fff; }
+    .toast.error { background: var(--error); color: #fff; }
 
     /* Responsive */
     @media (max-width: 640px) {
-      .header { padding: 0 16px; }
-
-      .invoice-card {
-        padding: 24px 16px;
-      }
-
-      .invoice-info {
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .invoice-total-amount {
-        font-size: 24px;
-      }
-
-      .btn-approve {
-        width: 100%;
-        justify-content: center;
-      }
+      .card { padding: 20px 16px; }
+      .invoice-info { flex-direction: column; gap: 10px; }
+      .total-amount { font-size: 22px; }
+      .btn-approve { width: 100%; justify-content: center; }
     }
 
     @media print {
-      .header, .invoice-hero, .invoice-actions, .footer { display: none; }
-      .invoice-container { padding: 0; margin: 0; max-width: 100%; }
-      .invoice-card { box-shadow: none; border-radius: 0; padding: 0; }
-      body { background: white; }
+      .header, .actions, .footer { display: none; }
+      .container { padding: 0; margin: 0; max-width: 100%; }
+      .card { box-shadow: none; border-radius: 0; padding: 0; }
+      body { background: #fff; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
   <header class="header">
-    <a href="#" class="header-logo">
-      <div class="header-logo-icon">D</div>
-      <div>
-        <div class="header-logo-text">Office DAIKOU</div>
-        <div class="header-logo-sub">by 大晃工業合同会社</div>
-      </div>
-    </a>
+    <a href="#" class="header-logo"><span class="o">O</span>ffice DAIKOU</a>
   </header>
 
-  <!-- Hero -->
-  <div class="invoice-hero">
-    <h1 class="invoice-hero-title">請求書</h1>
-    <p class="invoice-hero-meta" id="invoiceMeta">読み込み中...</p>
+  <div class="page-header">
+    <h1 class="page-title">請求書</h1>
+    <p class="page-meta" id="invoiceMeta">読み込み中...</p>
   </div>
 
-  <!-- Invoice Content -->
-  <div class="invoice-container">
-    <div class="invoice-card" id="invoiceCard">
+  <div class="container">
+    <div class="card" id="invoiceCard">
 
-      <!-- Loading state (default) -->
-      <div class="loading-state" id="loadingState">
+      <div class="loading" id="loadingState">
         <div class="spinner"></div>
         <p>請求書データを読み込んでいます...</p>
       </div>
 
-      <!-- Invoice content (shown after load) -->
-      <div id="invoiceContent" style="display: none;">
-
+      <div id="invoiceContent" style="display:none;">
         <div class="invoice-info">
-          <div class="invoice-info-left">
+          <div>
             <h3 id="invoiceCompany">-</h3>
             <p id="invoicePeriod">-</p>
           </div>
-          <div class="invoice-stamp" id="invoiceStatus">未承認</div>
+          <span class="status-tag" id="invoiceStatus">未承認</span>
         </div>
 
-        <div class="invoice-table-wrap">
+        <div class="table-wrap">
           <table class="invoice-table">
             <thead>
               <tr>
                 <th>日付</th>
                 <th>現場名</th>
-                <th class="text-right">人数</th>
-                <th class="text-right">単価</th>
-                <th class="text-right">高速代</th>
-                <th class="text-right">小計</th>
+                <th class="r">人数</th>
+                <th class="r">単価</th>
+                <th class="r">高速代</th>
+                <th class="r">小計</th>
               </tr>
             </thead>
-            <tbody id="invoiceTableBody">
-              <!-- Rows inserted by JS -->
-            </tbody>
+            <tbody id="invoiceTableBody"></tbody>
           </table>
         </div>
 
-        <div class="invoice-total">
-          <span class="invoice-total-label">合計金額</span>
-          <span class="invoice-total-amount" id="invoiceTotalAmount">¥0</span>
+        <div class="total-row">
+          <span class="total-label">合計金額</span>
+          <span class="total-amount" id="invoiceTotalAmount">¥0</span>
         </div>
 
-        <!-- Approve action -->
-        <div class="invoice-actions" id="invoiceActions">
-          <button class="btn-approve" id="approveBtn" onclick="handleApprove()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
-            承認する
-          </button>
+        <div class="actions" id="invoiceActions">
+          <button class="btn-approve" id="approveBtn" onclick="handleApprove()">承認する</button>
         </div>
 
-        <!-- Approved message -->
-        <div class="approved-message" id="approvedMessage">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
+        <div class="approved-msg" id="approvedMsg">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           この請求書は承認済みです。PDFがメールで送信されました。
         </div>
       </div>
-
     </div>
   </div>
 
-  <!-- Footer -->
   <footer class="footer">
     <p class="footer-company">大晃工業合同会社</p>
     <p>&copy; 2026 Office DAIKOU. All rights reserved.</p>
   </footer>
 
-  <!-- Toast -->
-  <div class="toast" id="toast">
-    <span id="toastText"></span>
-  </div>
+  <div class="toast" id="toast"><span id="toastText"></span></div>
 
   <script>
-    // GAS Web App URL - デプロイ後に設定
     const GAS_URL = '';
 
-    // URLパラメータ取得
     function getParams() {
-      const params = new URLSearchParams(window.location.search);
-      return {
-        company: params.get('company') || '',
-        year: parseInt(params.get('year')) || new Date().getFullYear(),
-        month: parseInt(params.get('month')) || new Date().getMonth() + 1,
-      };
+      const p = new URLSearchParams(window.location.search);
+      return { company: p.get('company') || '', year: parseInt(p.get('year')) || new Date().getFullYear(), month: parseInt(p.get('month')) || new Date().getMonth() + 1 };
     }
 
-    // 初期化
     document.addEventListener('DOMContentLoaded', () => {
-      const params = getParams();
-
-      if (!params.company) {
-        // デモデータ表示
-        showDemoData();
-        return;
-      }
-
-      document.getElementById('invoiceMeta').textContent =
-        `${params.company} - ${params.year}年${params.month}月分`;
-
-      if (GAS_URL) {
-        loadInvoiceData(params);
-      } else {
-        showDemoData();
-      }
+      const p = getParams();
+      if (!p.company) { showDemoData(); return; }
+      document.getElementById('invoiceMeta').textContent = p.company + ' - ' + p.year + '年' + p.month + '月分';
+      if (GAS_URL) loadInvoiceData(p); else showDemoData();
     });
 
-    // GASから請求書データ取得
-    function loadInvoiceData(params) {
-      fetch(`${GAS_URL}?action=invoice&company=${encodeURIComponent(params.company)}&year=${params.year}&month=${params.month}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            renderInvoice(data);
-          } else {
-            showToast('データの取得に失敗しました', 'error');
-          }
-        })
-        .catch(() => {
-          showToast('通信エラーが発生しました', 'error');
-        });
+    function loadInvoiceData(p) {
+      fetch(GAS_URL + '?action=invoice&company=' + encodeURIComponent(p.company) + '&year=' + p.year + '&month=' + p.month)
+        .then(r => r.json()).then(d => { if (d.success) renderInvoice(d); else showToast('データの取得に失敗しました', 'error'); })
+        .catch(() => showToast('通信エラーが発生しました', 'error'));
     }
 
-    // 請求書レンダリング
     function renderInvoice(data) {
       document.getElementById('loadingState').style.display = 'none';
       document.getElementById('invoiceContent').style.display = 'block';
-
       document.getElementById('invoiceCompany').textContent = data.company + ' 御中';
-      document.getElementById('invoicePeriod').textContent =
-        `${data.year}年${data.month}月分 請求書`;
-
+      document.getElementById('invoicePeriod').textContent = data.year + '年' + data.month + '月分 請求書';
       const tbody = document.getElementById('invoiceTableBody');
       tbody.innerHTML = '';
       let total = 0;
-
       data.items.forEach(item => {
-        const subtotal = item.workers * item.rate + item.highway;
-        total += subtotal;
+        const sub = item.workers * item.rate + item.highway;
+        total += sub;
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${item.month}/${item.day}</td>
-          <td>${escapeHtml(item.site)}</td>
-          <td class="text-right num">${item.workers}</td>
-          <td class="text-right num">${item.rate.toLocaleString()}</td>
-          <td class="text-right num">${item.highway.toLocaleString()}</td>
-          <td class="text-right num">${subtotal.toLocaleString()}</td>
-        `;
+        tr.innerHTML = '<td>' + item.month + '/' + item.day + '</td><td>' + esc(item.site) + '</td><td class="r">' + item.workers + '</td><td class="r">' + item.rate.toLocaleString() + '</td><td class="r">' + item.highway.toLocaleString() + '</td><td class="r">' + sub.toLocaleString() + '</td>';
         tbody.appendChild(tr);
       });
-
-      document.getElementById('invoiceTotalAmount').textContent =
-        '¥' + total.toLocaleString();
-
-      // ステータス反映
-      if (data.approved) {
-        setApprovedState();
-      }
+      document.getElementById('invoiceTotalAmount').textContent = '¥' + total.toLocaleString();
+      if (data.approved) setApproved();
     }
 
-    // デモデータ
     function showDemoData() {
-      const demoData = {
-        company: 'サンプル建設株式会社',
-        year: 2026,
-        month: 3,
-        approved: false,
-        items: [
-          { month: 3, day: 3, site: '○○マンション新築工事', workers: 3, rate: 18000, highway: 1200 },
-          { month: 3, day: 5, site: '○○マンション新築工事', workers: 2, rate: 18000, highway: 1200 },
-          { month: 3, day: 10, site: '△△ビル改修工事', workers: 4, rate: 20000, highway: 0 },
-          { month: 3, day: 15, site: '○○マンション新築工事', workers: 3, rate: 18000, highway: 1200 },
-          { month: 3, day: 22, site: '□□倉庫解体工事', workers: 5, rate: 17000, highway: 2400 },
-        ],
-      };
-
-      document.getElementById('invoiceMeta').textContent =
-        `${demoData.company} - ${demoData.year}年${demoData.month}月分`;
-
-      renderInvoice(demoData);
+      const d = { company: 'サンプル建設株式会社', year: 2026, month: 3, approved: false, items: [
+        { month:3, day:3, site:'○○マンション新築工事', workers:3, rate:18000, highway:1200 },
+        { month:3, day:5, site:'○○マンション新築工事', workers:2, rate:18000, highway:1200 },
+        { month:3, day:10, site:'△△ビル改修工事', workers:4, rate:20000, highway:0 },
+        { month:3, day:15, site:'○○マンション新築工事', workers:3, rate:18000, highway:1200 },
+        { month:3, day:22, site:'□□倉庫解体工事', workers:5, rate:17000, highway:2400 },
+      ]};
+      document.getElementById('invoiceMeta').textContent = d.company + ' - ' + d.year + '年' + d.month + '月分';
+      renderInvoice(d);
     }
 
-    // 承認処理
     function handleApprove() {
       const btn = document.getElementById('approveBtn');
-      const params = getParams();
-
-      // GAS未設定時はデモ動作
-      if (!GAS_URL) {
-        setApprovedState();
-        showToast('承認が完了しました（デモ）', 'success');
-        return;
-      }
-
-      btn.disabled = true;
-      btn.innerHTML = '<div class="spinner"></div> 承認中...';
-
-      fetch(`${GAS_URL}?action=approve&company=${encodeURIComponent(params.company)}&year=${params.year}&month=${params.month}`, {
-        method: 'POST',
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            setApprovedState();
-            showToast('承認が完了しました。PDFをメール送信しました。', 'success');
-          } else {
-            showToast(data.message || '承認に失敗しました', 'error');
-            btn.disabled = false;
-            btn.innerHTML = `
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
-                <polyline points="22 4 12 14.01 9 11.01"/>
-              </svg>
-              承認する
-            `;
-          }
-        })
-        .catch(() => {
-          showToast('通信エラーが発生しました', 'error');
-          btn.disabled = false;
-        });
+      if (!GAS_URL) { setApproved(); showToast('承認が完了しました（デモ）', 'success'); return; }
+      const p = getParams();
+      btn.disabled = true; btn.innerHTML = '<div class="spinner-sm"></div> 承認中...';
+      fetch(GAS_URL + '?action=approve&company=' + encodeURIComponent(p.company) + '&year=' + p.year + '&month=' + p.month, { method: 'POST' })
+        .then(r => r.json()).then(d => { if (d.success) { setApproved(); showToast('承認が完了しました', 'success'); } else { showToast(d.message || '承認に失敗しました', 'error'); btn.disabled = false; btn.textContent = '承認する'; } })
+        .catch(() => { showToast('通信エラー', 'error'); btn.disabled = false; });
     }
 
-    function setApprovedState() {
+    function setApproved() {
       document.getElementById('invoiceActions').style.display = 'none';
-      document.getElementById('approvedMessage').classList.add('show');
-      const statusEl = document.getElementById('invoiceStatus');
-      statusEl.textContent = '承認済み';
-      statusEl.classList.add('approved');
+      document.getElementById('approvedMsg').classList.add('show');
+      const s = document.getElementById('invoiceStatus');
+      s.textContent = '承認済み'; s.classList.add('approved');
     }
 
-    // HTML escape
-    function escapeHtml(str) {
-      const div = document.createElement('div');
-      div.textContent = str;
-      return div.innerHTML;
-    }
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-    // Toast
-    function showToast(message, type) {
-      const toast = document.getElementById('toast');
-      const toastText = document.getElementById('toastText');
-      toast.className = 'toast ' + (type || '');
-      toastText.textContent = message;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3500);
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.className = 'toast ' + (type || '');
+      document.getElementById('toastText').textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3500);
     }
   </script>
 </body>

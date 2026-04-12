@@ -6,387 +6,361 @@
   <title>Office DAIKOU ~by 大晃工業合同会社~</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
   <style>
-    /* ===== Reset & Base ===== */
-    *, *::before, *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --color-navy: #1a2744;
-      --color-navy-light: #243352;
-      --color-primary: #2563eb;
-      --color-primary-hover: #1d4ed8;
-      --color-primary-light: #dbeafe;
-      --color-accent: #f59e0b;
-      --color-accent-hover: #d97706;
-      --color-white: #ffffff;
-      --color-bg-light: #f8fafc;
-      --color-bg-card: #ffffff;
-      --color-text: #1e293b;
-      --color-text-sub: #64748b;
-      --color-text-light: #94a3b8;
-      --color-border: #e2e8f0;
-      --color-success: #10b981;
-      --color-error: #ef4444;
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
-      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
-      --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04);
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 16px;
-      --radius-xl: 24px;
-      --font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --bg: #f5f0ea;
+      --bg-white: #ffffff;
+      --bg-card: #ffffff;
+      --bg-input: #fafaf8;
+      --text: #222222;
+      --text-sub: #888880;
+      --text-light: #b0aba3;
+      --accent: #e07830;
+      --accent-hover: #c86820;
+      --green: #3a8a5c;
+      --green-light: #e8f5ee;
+      --green-border: #b0d4be;
+      --black: #222222;
+      --border: #e0dbd4;
+      --border-light: #ece8e2;
+      --error: #d44;
+      --shadow-card: 0 2px 12px rgba(0,0,0,0.04);
+      --radius: 8px;
+      --radius-lg: 14px;
+      --radius-pill: 50px;
+      --font: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
     }
 
-    html {
-      scroll-behavior: smooth;
-    }
+    html { scroll-behavior: smooth; }
 
     body {
-      font-family: var(--font-family);
-      color: var(--color-text);
-      background: var(--color-bg-light);
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
       line-height: 1.8;
       font-size: 15px;
       -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
     }
 
     /* ===== Header ===== */
     .header {
-      position: fixed;
+      position: sticky;
       top: 0;
-      left: 0;
-      right: 0;
       z-index: 100;
-      background: rgba(26, 39, 68, 0.95);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      padding: 0 24px;
-      height: 60px;
+      background: rgba(245, 240, 234, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 0 20px;
+      height: 56px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      border-bottom: 1px solid var(--border-light);
     }
 
     .header-logo {
       display: flex;
-      align-items: center;
-      gap: 10px;
+      align-items: baseline;
+      gap: 6px;
       text-decoration: none;
-      color: var(--color-white);
+      color: var(--text);
     }
 
-    .header-logo-icon {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-      border-radius: var(--radius-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 16px;
-      color: var(--color-white);
+    .header-logo-mark {
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 1px;
     }
 
-    .header-logo-text {
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
+    .header-logo-mark .o { color: var(--accent); }
 
     .header-logo-sub {
       font-size: 10px;
-      font-weight: 300;
-      color: var(--color-text-light);
-      display: block;
-      line-height: 1.2;
-      margin-top: -2px;
+      color: var(--text-sub);
+      letter-spacing: 1px;
     }
 
-    .header-nav {
+    .header-right {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 10px;
     }
 
-    .header-nav a {
-      color: rgba(255,255,255,0.75);
+    .header-cta {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: 0.2s;
       text-decoration: none;
-      font-size: 13px;
-      font-weight: 400;
-      padding: 6px 12px;
-      border-radius: var(--radius-sm);
-      transition: var(--transition);
+      white-space: nowrap;
     }
 
-    .header-nav a:hover {
-      color: var(--color-white);
-      background: rgba(255,255,255,0.08);
+    .header-cta:hover { background: var(--accent-hover); }
+
+    .hamburger {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
 
-    .header-nav a.active {
-      color: var(--color-white);
-      background: rgba(255,255,255,0.12);
-    }
-
-    /* ===== Screen Containers ===== */
-    .screen {
-      display: none;
-      min-height: 100vh;
-      padding-top: 60px;
-    }
-
-    .screen.active {
+    .hamburger span {
       display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 1px;
     }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 200;
+    }
+
+    .mobile-menu.open { display: block; }
+
+    .mobile-menu-panel {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 260px;
+      background: var(--bg-white);
+      padding: 24px;
+      animation: slideRight 0.25s ease-out;
+    }
+
+    @keyframes slideRight {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+
+    .mobile-menu-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--text-sub);
+      margin-bottom: 24px;
+    }
+
+    .mobile-menu-panel a {
+      display: block;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-light);
+      text-decoration: none;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    /* ===== Screen ===== */
+    .screen { display: none; }
+    .screen.active { display: block; }
 
     /* ===== Auth Screen ===== */
     .auth-screen {
       display: none;
-      min-height: 100vh;
-      background: linear-gradient(135deg, var(--color-navy) 0%, #1e3a5f 50%, var(--color-navy-light) 100%);
+      min-height: calc(100vh - 56px);
+      padding: 60px 20px;
       align-items: center;
       justify-content: center;
-      padding: 24px;
-      position: relative;
-      overflow: hidden;
     }
 
-    .auth-screen.active {
-      display: flex;
-    }
-
-    .auth-bg-pattern {
-      position: absolute;
-      inset: 0;
-      opacity: 0.04;
-      background-image:
-        radial-gradient(circle at 20% 50%, rgba(255,255,255,0.3) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(255,255,255,0.2) 0%, transparent 40%),
-        radial-gradient(circle at 60% 80%, rgba(255,255,255,0.15) 0%, transparent 45%);
-    }
+    .auth-screen.active { display: flex; }
 
     .auth-card {
-      position: relative;
-      background: var(--color-white);
+      background: var(--bg-white);
       border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-xl);
-      padding: 48px 40px;
+      box-shadow: var(--shadow-card);
+      padding: 40px 28px;
       width: 100%;
-      max-width: 420px;
-      text-align: center;
-      animation: fadeInUp 0.6s ease-out;
+      max-width: 400px;
+      animation: fadeUp 0.4s ease-out;
     }
 
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: translateY(0); }
-    }
-
-    .auth-logo {
-      width: 56px;
-      height: 56px;
-      background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-      border-radius: var(--radius-md);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 20px;
-      font-weight: 700;
-      font-size: 22px;
-      color: var(--color-white);
     }
 
     .auth-title {
       font-size: 22px;
-      font-weight: 700;
-      color: var(--color-navy);
-      margin-bottom: 4px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      margin-bottom: 2px;
     }
+
+    .auth-title .o { color: var(--accent); }
 
     .auth-subtitle {
-      font-size: 12px;
-      color: var(--color-text-sub);
-      margin-bottom: 32px;
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+      letter-spacing: 1px;
     }
 
-    .auth-label {
-      display: block;
-      text-align: left;
+    .auth-desc {
       font-size: 13px;
-      font-weight: 500;
-      color: var(--color-text);
-      margin-bottom: 8px;
+      color: var(--text-sub);
+      margin-bottom: 28px;
+      line-height: 1.6;
     }
 
-    .auth-input-wrap {
-      position: relative;
-      margin-bottom: 12px;
+    .field-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+      display: block;
     }
 
-    .auth-input-wrap svg {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 18px;
-      height: 18px;
-      color: var(--color-text-light);
-    }
-
-    .auth-input {
+    .field-input {
       width: 100%;
-      padding: 12px 14px 12px 42px;
-      border: 1.5px solid var(--color-border);
-      border-radius: var(--radius-md);
-      font-size: 15px;
-      font-family: var(--font-family);
-      color: var(--color-text);
-      background: var(--color-white);
-      transition: var(--transition);
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-family: var(--font);
+      color: var(--text);
+      background: var(--bg-input);
       outline: none;
+      transition: 0.2s;
+      -webkit-appearance: none;
     }
 
-    .auth-input:focus {
-      border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    .field-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(224, 120, 48, 0.1);
     }
 
-    .auth-input.error {
-      border-color: var(--color-error);
-      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    .field-input::placeholder { color: var(--text-light); }
+
+    .field-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-family: var(--font);
+      color: var(--text);
+      background: var(--bg-input);
+      outline: none;
+      transition: 0.2s;
+      resize: vertical;
+      min-height: 80px;
+      line-height: 1.7;
+      -webkit-appearance: none;
     }
+
+    .field-textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(224, 120, 48, 0.1);
+    }
+
+    .field-textarea::placeholder { color: var(--text-light); }
 
     .auth-error {
-      color: var(--color-error);
+      color: var(--error);
       font-size: 13px;
-      text-align: left;
-      margin-bottom: 16px;
-      min-height: 20px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
+      min-height: 22px;
+      margin-top: 8px;
     }
 
-    .auth-btn {
+    .btn-black {
       width: 100%;
-      padding: 13px 24px;
-      background: linear-gradient(135deg, var(--color-primary), #3b82f6);
-      color: var(--color-white);
+      padding: 14px;
+      background: var(--black);
+      color: #fff;
       border: none;
-      border-radius: var(--radius-md);
+      border-radius: var(--radius);
       font-size: 15px;
       font-weight: 600;
-      font-family: var(--font-family);
+      font-family: var(--font);
       cursor: pointer;
-      transition: var(--transition);
-      position: relative;
-      overflow: hidden;
+      transition: 0.2s;
+      margin-top: 8px;
     }
 
-    .auth-btn:hover {
-      background: linear-gradient(135deg, var(--color-primary-hover), var(--color-primary));
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-      transform: translateY(-1px);
-    }
-
-    .auth-btn:active {
-      transform: translateY(0);
-    }
+    .btn-black:hover { opacity: 0.85; }
+    .btn-black:disabled { opacity: 0.4; cursor: not-allowed; }
 
     .auth-footer {
-      margin-top: 24px;
-      font-size: 12px;
-      color: var(--color-text-light);
+      margin-top: 20px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-light);
     }
 
     /* ===== Form Screen ===== */
-    .form-screen {
-      display: none;
-      min-height: 100vh;
-      padding-top: 60px;
-      background: var(--color-bg-light);
+    .form-screen { display: none; }
+    .form-screen.active { display: block; }
+
+    .form-page-header {
+      padding: 28px 20px 20px;
+      max-width: 560px;
+      margin: 0 auto;
     }
 
-    .form-screen.active {
-      display: block;
+    .form-page-title {
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      line-height: 1.4;
     }
 
-    .form-hero {
-      background: linear-gradient(135deg, var(--color-navy), #1e3a5f);
-      padding: 32px 24px 48px;
-      color: var(--color-white);
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .form-hero::after {
-      content: '';
-      position: absolute;
-      bottom: -1px;
-      left: 0;
-      right: 0;
-      height: 24px;
-      background: var(--color-bg-light);
-      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-    }
-
-    .form-hero-title {
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-
-    .form-hero-desc {
+    .form-page-desc {
       font-size: 13px;
-      color: rgba(255,255,255,0.7);
+      color: var(--text-sub);
+      margin-top: 4px;
     }
 
     .form-container {
       max-width: 560px;
-      margin: -12px auto 0;
+      margin: 0 auto;
       padding: 0 20px 40px;
-      position: relative;
-      z-index: 1;
     }
 
     .form-card {
-      background: var(--color-white);
+      background: var(--bg-white);
       border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-lg);
-      padding: 32px 28px;
-      animation: fadeInUp 0.5s ease-out;
+      box-shadow: var(--shadow-card);
+      padding: 28px 24px;
     }
 
-    .form-section-title {
-      font-size: 14px;
+    .form-section {
+      margin-bottom: 24px;
+    }
+
+    .form-section-label {
+      font-size: 11px;
       font-weight: 600;
-      color: var(--color-navy);
-      margin-bottom: 16px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid var(--color-primary-light);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .form-section-title svg {
-      width: 18px;
-      height: 18px;
-      color: var(--color-primary);
+      color: var(--text-sub);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-light);
     }
 
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .form-label {
@@ -394,76 +368,44 @@
       align-items: center;
       gap: 6px;
       font-size: 13px;
-      font-weight: 500;
-      color: var(--color-text);
+      font-weight: 600;
+      color: var(--text);
       margin-bottom: 6px;
     }
 
-    .form-label .required {
+    .tag-required {
       font-size: 10px;
       font-weight: 600;
-      color: var(--color-white);
-      background: var(--color-error);
-      padding: 1px 6px;
+      color: var(--accent);
+      border: 1.5px solid var(--accent);
+      padding: 0 5px;
       border-radius: 3px;
-    }
-
-    .form-input {
-      width: 100%;
-      padding: 11px 14px;
-      border: 1.5px solid var(--color-border);
-      border-radius: var(--radius-sm);
-      font-size: 16px;
-      font-family: var(--font-family);
-      color: var(--color-text);
-      background: var(--color-white);
-      transition: var(--transition);
-      outline: none;
-      -webkit-appearance: none;
-    }
-
-    .form-input:focus {
-      border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
-
-    .form-input::placeholder {
-      color: var(--color-text-light);
+      line-height: 1.6;
     }
 
     /* Date row */
     .date-row {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 10px;
+      gap: 8px;
     }
 
-    .date-field {
-      position: relative;
-    }
+    .date-field { position: relative; }
+    .date-field .field-input { text-align: center; padding-right: 28px; }
 
-    .date-field .form-input {
-      text-align: center;
-    }
-
-    .date-field-label {
+    .date-unit {
       position: absolute;
       right: 10px;
       top: 50%;
       transform: translateY(-50%);
       font-size: 13px;
-      color: var(--color-text-sub);
+      color: var(--text-sub);
       pointer-events: none;
     }
 
-    /* Number with unit */
-    .input-with-unit {
-      position: relative;
-    }
-
-    .input-with-unit .form-input {
-      padding-right: 40px;
-    }
+    /* Input with unit */
+    .input-unit-wrap { position: relative; }
+    .input-unit-wrap .field-input { padding-right: 36px; }
 
     .input-unit {
       position: absolute;
@@ -471,71 +413,56 @@
       top: 50%;
       transform: translateY(-50%);
       font-size: 13px;
-      color: var(--color-text-sub);
+      color: var(--text-sub);
       pointer-events: none;
     }
 
-    /* ===== Drum Picker ===== */
-    .drum-picker-trigger {
+    /* Drum picker trigger */
+    .picker-trigger {
       width: 100%;
-      padding: 11px 14px;
-      border: 1.5px solid var(--color-border);
-      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
       font-size: 16px;
-      font-family: var(--font-family);
-      color: var(--color-text);
-      background: var(--color-white);
-      transition: var(--transition);
-      outline: none;
+      font-family: var(--font);
+      color: var(--text);
+      background: var(--bg-input);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      outline: none;
+      transition: 0.2s;
       -webkit-appearance: none;
       user-select: none;
     }
 
-    .drum-picker-trigger:focus {
-      border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    .picker-trigger:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(224, 120, 48, 0.1);
     }
 
-    .drum-picker-trigger .placeholder {
-      color: var(--color-text-light);
-    }
+    .picker-trigger .placeholder { color: var(--text-light); }
+    .picker-trigger .chevron { color: var(--text-light); font-size: 10px; }
 
-    .drum-picker-trigger .arrow {
-      color: var(--color-text-light);
-      font-size: 12px;
-      transition: var(--transition);
-    }
-
+    /* Drum overlay */
     .drum-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.4);
+      background: rgba(0,0,0,0.35);
       z-index: 300;
       display: none;
       align-items: flex-end;
       justify-content: center;
-      animation: overlayIn 0.2s ease-out;
     }
 
-    .drum-overlay.open {
-      display: flex;
-    }
-
-    @keyframes overlayIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
+    .drum-overlay.open { display: flex; }
 
     .drum-panel {
-      background: var(--color-white);
-      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      background: var(--bg-white);
+      border-radius: 20px 20px 0 0;
       width: 100%;
       max-width: 480px;
-      padding: 0 0 env(safe-area-inset-bottom, 0);
       animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
@@ -548,38 +475,28 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--color-border);
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-light);
     }
 
-    .drum-header-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--color-navy);
-    }
-
-    .drum-header-btn {
+    .drum-btn {
       background: none;
       border: none;
       font-size: 15px;
       font-weight: 600;
-      font-family: var(--font-family);
+      font-family: var(--font);
       cursor: pointer;
-      padding: 6px 12px;
-      border-radius: var(--radius-sm);
-      transition: var(--transition);
+      padding: 6px 10px;
+      border-radius: var(--radius);
     }
 
-    .drum-cancel {
-      color: var(--color-text-sub);
-    }
+    .drum-btn.cancel { color: var(--text-sub); }
+    .drum-btn.done { color: var(--accent); }
 
-    .drum-done {
-      color: var(--color-primary);
-    }
-
-    .drum-done:hover {
-      background: var(--color-primary-light);
+    .drum-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
     }
 
     .drum-body {
@@ -588,8 +505,7 @@
       overflow: hidden;
     }
 
-    .drum-body::before,
-    .drum-body::after {
+    .drum-body::before, .drum-body::after {
       content: '';
       position: absolute;
       left: 0;
@@ -601,12 +517,12 @@
 
     .drum-body::before {
       top: 0;
-      background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+      background: linear-gradient(to bottom, var(--bg-white), transparent);
     }
 
     .drum-body::after {
       bottom: 0;
-      background: linear-gradient(to top, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+      background: linear-gradient(to top, var(--bg-white), transparent);
     }
 
     .drum-highlight {
@@ -616,8 +532,8 @@
       right: 16px;
       height: 40px;
       transform: translateY(-50%);
-      background: var(--color-primary-light);
-      border-radius: var(--radius-sm);
+      background: var(--bg);
+      border-radius: var(--radius);
       z-index: 1;
       pointer-events: none;
     }
@@ -636,218 +552,192 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
-      font-weight: 500;
-      color: var(--color-text-sub);
-      transition: color 0.15s, transform 0.15s;
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--text-light);
       user-select: none;
       cursor: pointer;
+      transition: 0.15s;
     }
 
     .drum-item.selected {
-      color: var(--color-navy);
+      color: var(--text);
       font-weight: 700;
-      transform: scale(1.1);
+      transform: scale(1.08);
     }
 
-    /* Submit button */
+    /* Submit */
     .form-submit {
       width: 100%;
-      padding: 14px 24px;
-      background: linear-gradient(135deg, var(--color-primary), #3b82f6);
-      color: var(--color-white);
+      padding: 14px;
+      background: var(--black);
+      color: #fff;
       border: none;
-      border-radius: var(--radius-md);
-      font-size: 16px;
+      border-radius: var(--radius);
+      font-size: 15px;
       font-weight: 600;
-      font-family: var(--font-family);
+      font-family: var(--font);
       cursor: pointer;
-      transition: var(--transition);
+      transition: 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      margin-top: 28px;
+      margin-top: 24px;
     }
 
-    .form-submit:hover {
-      background: linear-gradient(135deg, var(--color-primary-hover), var(--color-primary));
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-      transform: translateY(-1px);
-    }
+    .form-submit:hover { opacity: 0.85; }
+    .form-submit:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    .form-submit:active {
-      transform: translateY(0);
-    }
+    .form-submit svg { width: 16px; height: 16px; }
 
-    .form-submit:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-
-    .form-submit svg {
-      width: 18px;
-      height: 18px;
-    }
-
-    /* Toast notification */
+    /* Toast */
     .toast {
       position: fixed;
       bottom: 24px;
       left: 50%;
       transform: translateX(-50%) translateY(100px);
-      background: var(--color-navy);
-      color: var(--color-white);
       padding: 14px 24px;
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-xl);
+      border-radius: var(--radius-pill);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
       font-size: 14px;
       font-weight: 500;
-      z-index: 200;
+      z-index: 400;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      max-width: calc(100vw - 48px);
+      max-width: calc(100vw - 40px);
+      white-space: nowrap;
     }
 
-    .toast.show {
-      transform: translateX(-50%) translateY(0);
-    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { background: var(--green); color: #fff; }
+    .toast.error { background: var(--error); color: #fff; }
 
-    .toast.success {
-      background: var(--color-success);
-    }
-
-    .toast.error {
-      background: var(--color-error);
-    }
-
-    .toast svg {
-      width: 20px;
-      height: 20px;
-      flex-shrink: 0;
-    }
-
-    /* ===== Footer ===== */
+    /* Footer */
     .footer {
-      background: var(--color-navy);
-      color: rgba(255,255,255,0.5);
       text-align: center;
-      padding: 24px;
-      font-size: 12px;
+      padding: 32px 20px;
+      font-size: 11px;
+      color: var(--text-light);
     }
 
     .footer-company {
-      color: rgba(255,255,255,0.7);
+      font-size: 12px;
+      color: var(--text-sub);
       font-weight: 500;
-      margin-bottom: 4px;
-      font-size: 13px;
+      margin-bottom: 2px;
     }
 
-    /* ===== Hamburger (mobile nav) ===== */
-    .hamburger {
+    /* Success Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 350;
       display: none;
-      background: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal-card {
+      background: var(--bg-white);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+      padding: 36px 28px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      animation: fadeUp 0.3s ease-out;
+    }
+
+    .modal-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--green-light);
+      border: 2px solid var(--green-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+
+    .modal-icon svg { color: var(--green); }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .modal-subtitle {
+      font-size: 14px;
+      color: var(--text-sub);
+      margin-bottom: 4px;
+    }
+
+    .modal-comment {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: var(--bg);
+      border-radius: var(--radius);
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.6;
+      text-align: left;
+      word-break: break-word;
+    }
+
+    .modal-comment-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-light);
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .modal-btn {
+      margin-top: 24px;
+      width: 100%;
+      padding: 13px;
+      background: var(--black);
+      color: #fff;
       border: none;
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-weight: 600;
+      font-family: var(--font);
       cursor: pointer;
-      padding: 4px;
-      color: var(--color-white);
+      transition: 0.2s;
     }
 
-    .hamburger svg {
-      width: 24px;
-      height: 24px;
-    }
+    .modal-btn:hover { opacity: 0.85; }
 
-    /* ===== Responsive ===== */
-    @media (max-width: 640px) {
-      .header {
-        padding: 0 16px;
-      }
-
-      .header-nav {
-        display: none;
-        position: absolute;
-        top: 60px;
-        left: 0;
-        right: 0;
-        background: var(--color-navy);
-        flex-direction: column;
-        padding: 8px 16px 16px;
-        border-bottom: 1px solid rgba(255,255,255,0.08);
-        gap: 2px;
-      }
-
-      .header-nav.open {
-        display: flex;
-      }
-
-      .header-nav a {
-        padding: 10px 12px;
-        font-size: 14px;
-      }
-
-      .hamburger {
-        display: block;
-      }
-
-      .auth-card {
-        padding: 36px 24px;
-      }
-
-      .auth-title {
-        font-size: 20px;
-      }
-
-      .form-card {
-        padding: 24px 20px;
-      }
-
-      .form-hero {
-        padding: 24px 16px 40px;
-      }
-
-      .form-hero-title {
-        font-size: 18px;
-      }
-
-      .form-container {
-        padding: 0 16px 32px;
-      }
-
-      .date-row {
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 8px;
-      }
-    }
-
-    /* ===== Spinner ===== */
+    /* Spinner */
     .spinner {
       width: 18px;
       height: 18px;
       border: 2.5px solid rgba(255,255,255,0.3);
-      border-top-color: var(--color-white);
+      border-top-color: #fff;
       border-radius: 50%;
       animation: spin 0.6s linear infinite;
+      display: inline-block;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ===== Scroll fade-in ===== */
-    .fade-in {
-      opacity: 0;
-      transform: translateY(16px);
-      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-    }
-
-    .fade-in.visible {
-      opacity: 1;
-      transform: translateY(0);
+    /* Responsive */
+    @media (max-width: 640px) {
+      .header { padding: 0 16px; }
+      .auth-card { padding: 32px 20px; }
+      .form-card { padding: 24px 18px; }
+      .form-page-header { padding: 24px 16px 16px; }
+      .form-container { padding: 0 16px 32px; }
     }
   </style>
 </head>
@@ -856,51 +746,44 @@
   <!-- ===== Header ===== -->
   <header class="header">
     <a href="#" class="header-logo" onclick="event.preventDefault();">
-      <div class="header-logo-icon">D</div>
-      <div>
-        <div class="header-logo-text">Office DAIKOU</div>
-        <div class="header-logo-sub">by 大晃工業合同会社</div>
-      </div>
+      <span class="header-logo-mark"><span class="o">O</span>ffice DAIKOU</span>
     </a>
-    <button class="hamburger" onclick="toggleNav()" aria-label="メニュー">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <line x1="3" y1="6" x2="21" y2="6"/>
-        <line x1="3" y1="12" x2="21" y2="12"/>
-        <line x1="3" y1="18" x2="21" y2="18"/>
-      </svg>
-    </button>
-    <nav class="header-nav" id="headerNav">
-      <a href="#" class="active" id="navForm" onclick="showScreen('form'); closeNav();">入力フォーム</a>
-      <a href="#" id="navLogout" onclick="logout(); closeNav();">ログアウト</a>
-    </nav>
+    <div class="header-right">
+      <a href="#" class="header-cta" id="headerCta" onclick="event.preventDefault();">入力フォーム</a>
+      <button class="hamburger" onclick="openMenu()" aria-label="メニュー">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </header>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu" onclick="closeMenu()">
+    <div class="mobile-menu-panel" onclick="event.stopPropagation()">
+      <button class="mobile-menu-close" onclick="closeMenu()">&times;</button>
+      <a href="#" onclick="showScreen('form'); closeMenu();">入力フォーム</a>
+      <a href="#" onclick="logout(); closeMenu();">ログアウト</a>
+    </div>
+  </div>
 
   <!-- ===== Auth Screen ===== -->
   <div class="auth-screen active" id="authScreen">
-    <div class="auth-bg-pattern"></div>
     <div class="auth-card">
-      <div class="auth-logo">D</div>
-      <h1 class="auth-title">Office DAIKOU</h1>
-      <p class="auth-subtitle">~by 大晃工業合同会社~　人工出し請求書自動生成ツール</p>
+      <h1 class="auth-title"><span class="o">O</span>ffice DAIKOU</h1>
+      <p class="auth-subtitle">by 大晃工業合同会社</p>
+      <p class="auth-desc">人工出し請求書自動生成ツール</p>
 
       <form onsubmit="handleAuth(event)">
-        <label class="auth-label" for="authPassword">パスワード</label>
-        <div class="auth-input-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0110 0v4"/>
-          </svg>
-          <input
-            type="password"
-            id="authPassword"
-            class="auth-input"
-            placeholder="パスワードを入力"
-            autocomplete="current-password"
-            required
-          >
-        </div>
+        <label class="field-label" for="authPassword">パスワード</label>
+        <input
+          type="password"
+          id="authPassword"
+          class="field-input"
+          placeholder="パスワードを入力"
+          autocomplete="current-password"
+          required
+        >
         <div class="auth-error" id="authError"></div>
-        <button type="submit" class="auth-btn" id="authBtn">ログイン</button>
+        <button type="submit" class="btn-black" id="authBtn">ログイン</button>
       </form>
 
       <p class="auth-footer">応援業者専用の入力ツールです</p>
@@ -910,113 +793,90 @@
   <!-- ===== Form Screen ===== -->
   <div class="form-screen" id="formScreen">
 
-    <div class="form-hero">
-      <h2 class="form-hero-title">現場情報入力</h2>
-      <p class="form-hero-desc">現場の人工情報を入力してください</p>
+    <div class="form-page-header">
+      <h2 class="form-page-title">現場情報入力</h2>
+      <p class="form-page-desc">現場の人工情報を入力してください</p>
     </div>
 
     <div class="form-container">
-      <div class="form-card fade-in">
+      <div class="form-card">
         <form id="dataForm" onsubmit="handleSubmit(event)">
 
-          <!-- 日付セクション -->
-          <div class="form-section-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            日付
-          </div>
-
-          <div class="form-group">
-            <div class="date-row">
-              <div class="date-field">
-                <input type="number" id="inputYear" class="form-input" placeholder="2026" required min="2020" max="2100">
-                <span class="date-field-label">年</span>
-              </div>
-              <div class="date-field">
-                <input type="number" id="inputMonth" class="form-input" placeholder="4" required min="1" max="12">
-                <span class="date-field-label">月</span>
-              </div>
-              <div class="date-field">
-                <input type="number" id="inputDay" class="form-input" placeholder="" required min="1" max="31">
-                <span class="date-field-label">日</span>
+          <!-- 日付 -->
+          <div class="form-section">
+            <div class="form-section-label">日付</div>
+            <div class="form-group">
+              <div class="date-row">
+                <div class="date-field">
+                  <input type="number" id="inputYear" class="field-input" placeholder="2026" required min="2020" max="2100">
+                  <span class="date-unit">年</span>
+                </div>
+                <div class="date-field">
+                  <input type="number" id="inputMonth" class="field-input" placeholder="4" required min="1" max="12">
+                  <span class="date-unit">月</span>
+                </div>
+                <div class="date-field">
+                  <input type="number" id="inputDay" class="field-input" placeholder="" required min="1" max="31">
+                  <span class="date-unit">日</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- 現場情報セクション -->
-          <div class="form-section-title" style="margin-top: 28px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-              <polyline points="9 22 9 12 15 12 15 22"/>
-            </svg>
-            現場情報
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="inputCompany">
-              企業名
-              <span class="required">必須</span>
-            </label>
-            <input type="text" id="inputCompany" class="form-input" placeholder="例：○○建設株式会社" required>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="inputSite">
-              現場名
-              <span class="required">必須</span>
-            </label>
-            <input type="text" id="inputSite" class="form-input" placeholder="例：△△マンション新築工事" required>
-          </div>
-
-          <!-- 金額セクション -->
-          <div class="form-section-title" style="margin-top: 28px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="12" y1="1" x2="12" y2="23"/>
-              <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
-            </svg>
-            人数・金額
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">
-              人数
-              <span class="required">必須</span>
-            </label>
-            <input type="hidden" id="inputWorkers" required>
-            <div class="drum-picker-trigger" id="workersTrigger" onclick="openDrumPicker()" tabindex="0" role="button">
-              <span id="workersDisplay" class="placeholder">選択してください</span>
-              <span class="arrow">▼</span>
+          <!-- 現場情報 -->
+          <div class="form-section">
+            <div class="form-section-label">現場情報</div>
+            <div class="form-group">
+              <label class="form-label">企業名 <span class="tag-required">必須</span></label>
+              <input type="text" id="inputCompany" class="field-input" placeholder="例：○○建設株式会社" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">現場名 <span class="tag-required">必須</span></label>
+              <input type="text" id="inputSite" class="field-input" placeholder="例：△△マンション新築工事" required>
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="inputRate">
-              単価
-              <span class="required">必須</span>
-            </label>
-            <div class="input-with-unit">
-              <input type="number" id="inputRate" class="form-input" placeholder="0" required min="1" step="1">
-              <span class="input-unit">円</span>
+          <!-- 人数・金額 -->
+          <div class="form-section">
+            <div class="form-section-label">人数・金額</div>
+
+            <div class="form-group">
+              <label class="form-label">人数 <span class="tag-required">必須</span></label>
+              <input type="hidden" id="inputWorkers" required>
+              <div class="picker-trigger" id="workersTrigger" onclick="openDrumPicker()" tabindex="0" role="button">
+                <span id="workersDisplay" class="placeholder">選択してください</span>
+                <span class="chevron">&#9662;</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">単価 <span class="tag-required">必須</span></label>
+              <div class="input-unit-wrap">
+                <input type="number" id="inputRate" class="field-input" placeholder="0" required min="1" step="1">
+                <span class="input-unit">円</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">高速代 <span class="tag-required">必須</span></label>
+              <div class="input-unit-wrap">
+                <input type="number" id="inputHighway" class="field-input" placeholder="0" required min="0" step="1">
+                <span class="input-unit">円</span>
+              </div>
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="inputHighway">
-              高速代
-              <span class="required">必須</span>
-            </label>
-            <div class="input-with-unit">
-              <input type="number" id="inputHighway" class="form-input" placeholder="0" required min="0" step="1">
-              <span class="input-unit">円</span>
+          <!-- コメント -->
+          <div class="form-section">
+            <div class="form-section-label">コメント</div>
+            <div class="form-group">
+              <label class="form-label">ひとこと</label>
+              <textarea id="inputComment" class="field-textarea" placeholder="例：今日もありがとうございます！安全作業お疲れ様でした！"></textarea>
             </div>
           </div>
 
           <button type="submit" class="form-submit" id="submitBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"/>
               <polygon points="22 2 15 22 11 13 2 9 22 2"/>
             </svg>
@@ -1032,13 +892,32 @@
     </footer>
   </div>
 
+  <!-- ===== Success Modal ===== -->
+  <div class="modal-overlay" id="successModal">
+    <div class="modal-card">
+      <div class="modal-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <h3 class="modal-title">送信完了！</h3>
+      <p class="modal-subtitle" id="modalSubtotal"></p>
+      <div id="modalCommentArea" style="display:none;">
+        <div class="modal-comment-label">コメント</div>
+        <div class="modal-comment" id="modalCommentText"></div>
+      </div>
+      <button class="modal-btn" onclick="closeSuccessModal()">OK</button>
+    </div>
+  </div>
+
   <!-- ===== Drum Picker ===== -->
   <div class="drum-overlay" id="drumOverlay" onclick="onDrumOverlayClick(event)">
     <div class="drum-panel">
       <div class="drum-header">
-        <button class="drum-header-btn drum-cancel" onclick="closeDrumPicker()">キャンセル</button>
-        <span class="drum-header-title">人数を選択</span>
-        <button class="drum-header-btn drum-done" onclick="confirmDrumPicker()">決定</button>
+        <button class="drum-btn cancel" onclick="closeDrumPicker()">キャンセル</button>
+        <span class="drum-title">人数を選択</span>
+        <button class="drum-btn done" onclick="confirmDrumPicker()">決定</button>
       </div>
       <div class="drum-body">
         <div class="drum-highlight"></div>
@@ -1047,71 +926,33 @@
     </div>
   </div>
 
-  <!-- ===== Toast ===== -->
-  <div class="toast" id="toast">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="toastIcon">
-      <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
-      <polyline points="22 4 12 14.01 9 11.01"/>
-    </svg>
-    <span id="toastText"></span>
-  </div>
+  <!-- Toast -->
+  <div class="toast" id="toast"><span id="toastText"></span></div>
 
   <script>
-    // ===== GAS Web App URL =====
-    // デプロイ後にここにGAS WebアプリのURLを設定してください
     const GAS_URL = '';
-
-    // ===== State =====
     let isAuthenticated = false;
 
     // ===== Init =====
     document.addEventListener('DOMContentLoaded', () => {
-      // 現在の年月を初期値として設定
       const now = new Date();
       document.getElementById('inputYear').value = now.getFullYear();
       document.getElementById('inputMonth').value = now.getMonth() + 1;
-
-      // セッション確認
       if (sessionStorage.getItem('authenticated') === 'true') {
         isAuthenticated = true;
         showScreen('form');
       }
-
-      // Fade-in observer
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-          }
-        });
-      }, { threshold: 0.1 });
-
-      document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
     });
 
     // ===== Navigation =====
-    function toggleNav() {
-      document.getElementById('headerNav').classList.toggle('open');
-    }
-
-    function closeNav() {
-      document.getElementById('headerNav').classList.remove('open');
-    }
+    function openMenu() { document.getElementById('mobileMenu').classList.add('open'); }
+    function closeMenu() { document.getElementById('mobileMenu').classList.remove('open'); }
 
     function showScreen(screen) {
       document.getElementById('authScreen').classList.remove('active');
       document.getElementById('formScreen').classList.remove('active');
-
-      if (screen === 'auth') {
-        document.getElementById('authScreen').classList.add('active');
-      } else if (screen === 'form') {
-        document.getElementById('formScreen').classList.add('active');
-      }
-
-      // ナビのアクティブ状態を更新
-      document.querySelectorAll('.header-nav a').forEach(a => a.classList.remove('active'));
-      const navEl = document.getElementById('navForm');
-      if (navEl && screen === 'form') navEl.classList.add('active');
+      if (screen === 'auth') document.getElementById('authScreen').classList.add('active');
+      if (screen === 'form') document.getElementById('formScreen').classList.add('active');
     }
 
     // ===== Auth =====
@@ -1119,30 +960,22 @@
       e.preventDefault();
       const password = document.getElementById('authPassword').value;
       const errorEl = document.getElementById('authError');
-      const inputEl = document.getElementById('authPassword');
       const btn = document.getElementById('authBtn');
 
-      // GAS URLが未設定の場合はローカルデモモードで動作
       if (!GAS_URL) {
-        // デモ用：パスワードは "demo" で認証可能
         if (password === 'demo') {
           isAuthenticated = true;
           sessionStorage.setItem('authenticated', 'true');
           errorEl.textContent = '';
-          inputEl.classList.remove('error');
           showScreen('form');
-          return;
         } else {
           errorEl.textContent = 'パスワードが違います';
-          inputEl.classList.add('error');
-          return;
         }
+        return;
       }
 
-      // GAS認証APIへリクエスト
       btn.disabled = true;
       btn.innerHTML = '<div class="spinner"></div>';
-
       fetch(GAS_URL + '?action=auth&password=' + encodeURIComponent(password))
         .then(res => res.json())
         .then(data => {
@@ -1150,30 +983,19 @@
             isAuthenticated = true;
             sessionStorage.setItem('authenticated', 'true');
             errorEl.textContent = '';
-            inputEl.classList.remove('error');
             showScreen('form');
           } else {
             errorEl.textContent = 'パスワードが違います';
-            inputEl.classList.add('error');
           }
         })
-        .catch(() => {
-          errorEl.textContent = '通信エラーが発生しました';
-          inputEl.classList.add('error');
-        })
-        .finally(() => {
-          btn.disabled = false;
-          btn.textContent = 'ログイン';
-        });
+        .catch(() => { errorEl.textContent = '通信エラーが発生しました'; })
+        .finally(() => { btn.disabled = false; btn.textContent = 'ログイン'; });
     }
 
-    // ===== Form Submit =====
+    // ===== Form =====
     function handleSubmit(e) {
       e.preventDefault();
-
       const btn = document.getElementById('submitBtn');
-      const form = document.getElementById('dataForm');
-
       const data = {
         year: parseInt(document.getElementById('inputYear').value),
         month: parseInt(document.getElementById('inputMonth').value),
@@ -1183,67 +1005,31 @@
         workers: parseInt(document.getElementById('inputWorkers').value),
         rate: parseInt(document.getElementById('inputRate').value),
         highway: parseInt(document.getElementById('inputHighway').value),
+        comment: document.getElementById('inputComment').value.trim(),
       };
 
-      // バリデーション
-      if (!data.company || !data.site) {
-        showToast('すべての項目を入力してください', 'error');
-        return;
-      }
+      if (!data.company || !data.site) { showToast('すべての項目を入力してください', 'error'); return; }
+      if (!data.workers || data.workers < 1) { showToast('人数を選択してください', 'error'); return; }
+      if (data.rate < 1) { showToast('単価は1以上を入力してください', 'error'); return; }
+      if (data.highway < 0) { showToast('高速代は0以上を入力してください', 'error'); return; }
 
-      if (!data.workers || data.workers < 1) {
-        showToast('人数を選択してください', 'error');
-        return;
-      }
+      const sub = data.workers * data.rate + data.highway;
 
-      if (data.rate < 1) {
-        showToast('単価は1以上を入力してください', 'error');
-        return;
-      }
-
-      if (data.highway < 0) {
-        showToast('高速代は0以上を入力してください', 'error');
-        return;
-      }
-
-      // GAS URLが未設定の場合はローカルデモモード
       if (!GAS_URL) {
-        const subtotal = data.workers * data.rate + data.highway;
-        showToast(`送信完了！ 小計: ${subtotal.toLocaleString()}円`, 'success');
+        showSuccessModal(sub, data.comment);
         resetForm();
         return;
       }
 
-      // GASへPOST送信
       btn.disabled = true;
       btn.innerHTML = '<div class="spinner"></div> 送信中...';
-
-      fetch(GAS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
+      fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
         .then(res => res.json())
-        .then(result => {
-          if (result.success) {
-            showToast('送信が完了しました', 'success');
-            resetForm();
-          } else {
-            showToast(result.message || '送信に失敗しました', 'error');
-          }
-        })
-        .catch(() => {
-          showToast('通信エラーが発生しました', 'error');
-        })
+        .then(r => { if (r.success) { showSuccessModal(sub, data.comment); resetForm(); } else { showToast(r.message || '送信に失敗しました', 'error'); } })
+        .catch(() => { showToast('通信エラーが発生しました', 'error'); })
         .finally(() => {
           btn.disabled = false;
-          btn.innerHTML = `
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"/>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-            </svg>
-            送信する
-          `;
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> 送信する';
         });
     }
 
@@ -1255,93 +1041,76 @@
       document.getElementById('inputWorkers').value = '';
       document.getElementById('inputRate').value = '';
       document.getElementById('inputHighway').value = '';
-      // ドラムピッカーもリセット
+      document.getElementById('inputComment').value = '';
       drumSelected = null;
-      const display = document.getElementById('workersDisplay');
-      display.textContent = '選択してください';
-      display.classList.add('placeholder');
-      // 年月は維持
+      const d = document.getElementById('workersDisplay');
+      d.textContent = '選択してください';
+      d.classList.add('placeholder');
       document.getElementById('inputYear').value = now.getFullYear();
       document.getElementById('inputMonth').value = now.getMonth() + 1;
     }
 
-    // ===== Logout =====
     function logout() {
       isAuthenticated = false;
       sessionStorage.removeItem('authenticated');
       document.getElementById('authPassword').value = '';
       document.getElementById('authError').textContent = '';
-      document.getElementById('authPassword').classList.remove('error');
       showScreen('auth');
     }
 
+    // ===== Success Modal =====
+    function showSuccessModal(subtotal, comment) {
+      document.getElementById('modalSubtotal').textContent = '小計: ¥' + subtotal.toLocaleString();
+      const commentArea = document.getElementById('modalCommentArea');
+      const commentText = document.getElementById('modalCommentText');
+      if (comment) {
+        commentText.textContent = comment;
+        commentArea.style.display = 'block';
+      } else {
+        commentArea.style.display = 'none';
+      }
+      document.getElementById('successModal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSuccessModal() {
+      document.getElementById('successModal').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
     // ===== Drum Picker =====
-    const DRUM_MIN = 1;
-    const DRUM_MAX = 30;
-    const DRUM_ITEM_H = 40;
-    const DRUM_VISIBLE = 5; // items visible in viewport
-    let drumY = 0;
-    let drumSelected = null;
-    let drumTouchStartY = 0;
-    let drumStartOffset = 0;
-    let drumMomentum = 0;
-    let drumLastY = 0;
-    let drumLastTime = 0;
-    let drumAnimFrame = null;
+    const DRUM_MIN = 1, DRUM_MAX = 30, DRUM_ITEM_H = 40, DRUM_VISIBLE = 5;
+    let drumY = 0, drumSelected = null, drumTouchStartY = 0, drumStartOffset = 0;
+    let drumMomentum = 0, drumLastY = 0, drumLastTime = 0, drumAnimFrame = null;
 
     function buildDrumItems() {
-      const scroll = document.getElementById('drumScroll');
-      scroll.innerHTML = '';
-      // padding items top/bottom so the first/last can be centered
+      const s = document.getElementById('drumScroll');
+      s.innerHTML = '';
       const pad = Math.floor(DRUM_VISIBLE / 2);
-      for (let i = 0; i < pad; i++) {
-        const div = document.createElement('div');
-        div.className = 'drum-item';
-        div.innerHTML = '&nbsp;';
-        scroll.appendChild(div);
-      }
-      for (let n = DRUM_MIN; n <= DRUM_MAX; n++) {
-        const div = document.createElement('div');
-        div.className = 'drum-item';
-        div.textContent = n + ' 人';
-        div.dataset.value = n;
-        div.onclick = () => snapToValue(n);
-        scroll.appendChild(div);
-      }
-      for (let i = 0; i < pad; i++) {
-        const div = document.createElement('div');
-        div.className = 'drum-item';
-        div.innerHTML = '&nbsp;';
-        scroll.appendChild(div);
-      }
+      for (let i = 0; i < pad; i++) { const d = document.createElement('div'); d.className = 'drum-item'; d.innerHTML = '&nbsp;'; s.appendChild(d); }
+      for (let n = DRUM_MIN; n <= DRUM_MAX; n++) { const d = document.createElement('div'); d.className = 'drum-item'; d.textContent = n + ' 人'; d.dataset.value = n; d.onclick = () => snapToValue(n); s.appendChild(d); }
+      for (let i = 0; i < pad; i++) { const d = document.createElement('div'); d.className = 'drum-item'; d.innerHTML = '&nbsp;'; s.appendChild(d); }
     }
 
     function openDrumPicker() {
       buildDrumItems();
-      const overlay = document.getElementById('drumOverlay');
-      overlay.classList.add('open');
+      document.getElementById('drumOverlay').classList.add('open');
       document.body.style.overflow = 'hidden';
-
-      const current = drumSelected || 1;
-      drumY = -((current - DRUM_MIN) * DRUM_ITEM_H);
-      applyDrumPosition(false);
-      updateDrumHighlight();
-
-      // Touch events
-      const scroll = document.getElementById('drumScroll');
-      scroll.addEventListener('touchstart', onDrumTouchStart, { passive: false });
-      scroll.addEventListener('touchmove', onDrumTouchMove, { passive: false });
-      scroll.addEventListener('touchend', onDrumTouchEnd);
-      // Mouse events for desktop
-      scroll.addEventListener('mousedown', onDrumMouseDown);
+      drumY = -((drumSelected || 1) - DRUM_MIN) * DRUM_ITEM_H;
+      applyDrum(false); updateHL();
+      const s = document.getElementById('drumScroll');
+      s.addEventListener('touchstart', dtStart, { passive: false });
+      s.addEventListener('touchmove', dtMove, { passive: false });
+      s.addEventListener('touchend', dtEnd);
+      s.addEventListener('mousedown', dmDown);
     }
 
     function closeDrumPicker() {
-      const overlay = document.getElementById('drumOverlay');
-      overlay.classList.remove('open');
+      document.getElementById('drumOverlay').classList.remove('open');
       document.body.style.overflow = '';
       cancelAnimationFrame(drumAnimFrame);
-      cleanupDrumMouse();
+      document.removeEventListener('mousemove', dmMove);
+      document.removeEventListener('mouseup', dmUp);
     }
 
     function confirmDrumPicker() {
@@ -1349,168 +1118,86 @@
       const val = Math.max(DRUM_MIN, Math.min(DRUM_MAX, idx + DRUM_MIN));
       drumSelected = val;
       document.getElementById('inputWorkers').value = val;
-      const display = document.getElementById('workersDisplay');
-      display.textContent = val + ' 人';
-      display.classList.remove('placeholder');
+      const d = document.getElementById('workersDisplay');
+      d.textContent = val + ' 人';
+      d.classList.remove('placeholder');
       closeDrumPicker();
     }
 
-    function onDrumOverlayClick(e) {
-      if (e.target.classList.contains('drum-overlay')) closeDrumPicker();
+    function onDrumOverlayClick(e) { if (e.target.classList.contains('drum-overlay')) closeDrumPicker(); }
+
+    function applyDrum(smooth) {
+      const s = document.getElementById('drumScroll');
+      const tx = drumY + Math.floor(DRUM_VISIBLE / 2) * DRUM_ITEM_H;
+      s.style.transition = smooth ? 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)' : 'none';
+      s.style.transform = 'translateY(' + tx + 'px)';
     }
 
-    function applyDrumPosition(smooth) {
-      const scroll = document.getElementById('drumScroll');
-      const padTop = Math.floor(DRUM_VISIBLE / 2) * DRUM_ITEM_H;
-      const tx = drumY + padTop;
-      scroll.style.transition = smooth ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none';
-      scroll.style.transform = `translateY(${tx}px)`;
-    }
-
-    function snapToNearest(smooth) {
-      const maxIdx = DRUM_MAX - DRUM_MIN;
+    function snapNearest(smooth) {
       let idx = Math.round(-drumY / DRUM_ITEM_H);
-      idx = Math.max(0, Math.min(maxIdx, idx));
+      idx = Math.max(0, Math.min(DRUM_MAX - DRUM_MIN, idx));
       drumY = -(idx * DRUM_ITEM_H);
-      applyDrumPosition(smooth !== false);
-      updateDrumHighlight();
+      applyDrum(smooth !== false); updateHL();
     }
 
-    function snapToValue(val) {
-      drumY = -((val - DRUM_MIN) * DRUM_ITEM_H);
-      applyDrumPosition(true);
-      updateDrumHighlight();
-    }
+    function snapToValue(v) { drumY = -((v - DRUM_MIN) * DRUM_ITEM_H); applyDrum(true); updateHL(); }
 
-    function updateDrumHighlight() {
+    function updateHL() {
       const idx = Math.round(-drumY / DRUM_ITEM_H);
       const val = idx + DRUM_MIN;
-      document.querySelectorAll('.drum-item').forEach(el => {
-        el.classList.toggle('selected', parseInt(el.dataset.value) === val);
-      });
+      document.querySelectorAll('.drum-item').forEach(el => { el.classList.toggle('selected', parseInt(el.dataset.value) === val); });
     }
 
-    // Touch handling
-    function onDrumTouchStart(e) {
-      cancelAnimationFrame(drumAnimFrame);
-      drumTouchStartY = e.touches[0].clientY;
-      drumStartOffset = drumY;
-      drumLastY = drumTouchStartY;
-      drumLastTime = Date.now();
-      drumMomentum = 0;
-    }
-
-    function onDrumTouchMove(e) {
+    function dtStart(e) { cancelAnimationFrame(drumAnimFrame); drumTouchStartY = e.touches[0].clientY; drumStartOffset = drumY; drumLastY = drumTouchStartY; drumLastTime = Date.now(); drumMomentum = 0; }
+    function dtMove(e) {
       e.preventDefault();
-      const curY = e.touches[0].clientY;
-      const delta = curY - drumTouchStartY;
-      drumY = drumStartOffset + delta;
-
-      // Clamp with rubber-band
-      const minY = -((DRUM_MAX - DRUM_MIN) * DRUM_ITEM_H);
-      if (drumY > 0) drumY = drumY * 0.3;
-      if (drumY < minY) drumY = minY + (drumY - minY) * 0.3;
-
-      applyDrumPosition(false);
-      updateDrumHighlight();
-
-      const now = Date.now();
-      const dt = now - drumLastTime;
-      if (dt > 0) {
-        drumMomentum = (curY - drumLastY) / dt;
-      }
-      drumLastY = curY;
-      drumLastTime = now;
-    }
-
-    function onDrumTouchEnd() {
-      if (Math.abs(drumMomentum) > 0.3) {
-        animateMomentum();
-      } else {
-        snapToNearest();
-      }
-    }
-
-    // Mouse handling (desktop)
-    function onDrumMouseDown(e) {
-      e.preventDefault();
-      cancelAnimationFrame(drumAnimFrame);
-      drumTouchStartY = e.clientY;
-      drumStartOffset = drumY;
-      drumLastY = e.clientY;
-      drumLastTime = Date.now();
-      drumMomentum = 0;
-      document.addEventListener('mousemove', onDrumMouseMove);
-      document.addEventListener('mouseup', onDrumMouseUp);
-    }
-
-    function onDrumMouseMove(e) {
-      const curY = e.clientY;
-      const delta = curY - drumTouchStartY;
+      const y = e.touches[0].clientY, delta = y - drumTouchStartY;
       drumY = drumStartOffset + delta;
       const minY = -((DRUM_MAX - DRUM_MIN) * DRUM_ITEM_H);
-      if (drumY > 0) drumY = drumY * 0.3;
+      if (drumY > 0) drumY *= 0.3;
       if (drumY < minY) drumY = minY + (drumY - minY) * 0.3;
-      applyDrumPosition(false);
-      updateDrumHighlight();
-      const now = Date.now();
-      const dt = now - drumLastTime;
-      if (dt > 0) drumMomentum = (curY - drumLastY) / dt;
-      drumLastY = curY;
-      drumLastTime = now;
+      applyDrum(false); updateHL();
+      const now = Date.now(), dt = now - drumLastTime;
+      if (dt > 0) drumMomentum = (y - drumLastY) / dt;
+      drumLastY = y; drumLastTime = now;
     }
+    function dtEnd() { Math.abs(drumMomentum) > 0.3 ? animMomentum() : snapNearest(); }
 
-    function onDrumMouseUp() {
-      cleanupDrumMouse();
-      if (Math.abs(drumMomentum) > 0.3) {
-        animateMomentum();
-      } else {
-        snapToNearest();
-      }
-    }
-
-    function cleanupDrumMouse() {
-      document.removeEventListener('mousemove', onDrumMouseMove);
-      document.removeEventListener('mouseup', onDrumMouseUp);
-    }
-
-    function animateMomentum() {
-      const friction = 0.95;
+    function dmDown(e) { e.preventDefault(); cancelAnimationFrame(drumAnimFrame); drumTouchStartY = e.clientY; drumStartOffset = drumY; drumLastY = e.clientY; drumLastTime = Date.now(); drumMomentum = 0; document.addEventListener('mousemove', dmMove); document.addEventListener('mouseup', dmUp); }
+    function dmMove(e) {
+      const y = e.clientY, delta = y - drumTouchStartY;
+      drumY = drumStartOffset + delta;
       const minY = -((DRUM_MAX - DRUM_MIN) * DRUM_ITEM_H);
+      if (drumY > 0) drumY *= 0.3;
+      if (drumY < minY) drumY = minY + (drumY - minY) * 0.3;
+      applyDrum(false); updateHL();
+      const now = Date.now(), dt = now - drumLastTime;
+      if (dt > 0) drumMomentum = (y - drumLastY) / dt;
+      drumLastY = y; drumLastTime = now;
+    }
+    function dmUp() { document.removeEventListener('mousemove', dmMove); document.removeEventListener('mouseup', dmUp); Math.abs(drumMomentum) > 0.3 ? animMomentum() : snapNearest(); }
 
+    function animMomentum() {
+      const minY = -((DRUM_MAX - DRUM_MIN) * DRUM_ITEM_H);
       function step() {
-        drumMomentum *= friction;
+        drumMomentum *= 0.95;
         drumY += drumMomentum * 16;
         if (drumY > 0) { drumY = 0; drumMomentum = 0; }
         if (drumY < minY) { drumY = minY; drumMomentum = 0; }
-        applyDrumPosition(false);
-        updateDrumHighlight();
-        if (Math.abs(drumMomentum) > 0.01) {
-          drumAnimFrame = requestAnimationFrame(step);
-        } else {
-          snapToNearest();
-        }
+        applyDrum(false); updateHL();
+        if (Math.abs(drumMomentum) > 0.01) drumAnimFrame = requestAnimationFrame(step);
+        else snapNearest();
       }
       drumAnimFrame = requestAnimationFrame(step);
     }
 
     // ===== Toast =====
-    function showToast(message, type) {
-      const toast = document.getElementById('toast');
-      const toastText = document.getElementById('toastText');
-      const toastIcon = document.getElementById('toastIcon');
-
-      toast.className = 'toast ' + type;
-      toastText.textContent = message;
-
-      if (type === 'success') {
-        toastIcon.innerHTML = '<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>';
-      } else {
-        toastIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>';
-      }
-
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3000);
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.className = 'toast ' + (type || '');
+      document.getElementById('toastText').textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
     }
   </script>
 </body>
