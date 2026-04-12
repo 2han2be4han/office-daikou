@@ -58,6 +58,8 @@ function doGet(e) {
       return handleAuth(e);
     case 'invoice':
       return handleGetInvoice(e);
+    case 'invoicelist':
+      return handleGetInvoiceList(e);
     default:
       return jsonResponse({ success: false, message: '不明なアクションです' });
   }
@@ -160,25 +162,22 @@ function generateAndSendInvoiceUrls() {
     }
   }
 
-  // WebアプリのURL
-  const webAppUrl = ScriptApp.getService().getUrl();
+  // 請求書一覧ページのURL
+  const listPageUrl = 'https://2han2be4han.github.io/office-daikou/invoice.html?year=' + targetYear + '&month=' + targetMonth;
   const emailTo = props.getProperty('PARENT_COMPANY_EMAIL');
-  const emailBody = [];
+  const companySummary = [];
+  let grandTotal = 0;
+  let hasNew = false;
 
   for (const company in companyMap) {
     // 重複送信防止
     if (sentCompanies.has(company)) continue;
+    hasNew = true;
 
     const items = companyMap[company];
     let total = 0;
     items.forEach(row => { total += row[9]; }); // J列: 小計
-
-    // 請求書URL生成
-    const invoiceUrl = webAppUrl +
-      '?action=invoice' +
-      '&company=' + encodeURIComponent(company) +
-      '&year=' + targetYear +
-      '&month=' + targetMonth;
+    grandTotal += total;
 
     // 請求書シートに記録
     invoiceSheet.appendRow([
@@ -186,21 +185,26 @@ function generateAndSendInvoiceUrls() {
       targetMonth,
       company,
       total,
-      invoiceUrl,
+      listPageUrl,
       new Date(),  // 送信日時
       '',          // 承認日時（未承認）
       '未承認'
     ]);
 
-    emailBody.push(`■ ${company}\n  合計金額: ¥${total.toLocaleString()}\n  請求書URL: ${invoiceUrl}\n`);
+    companySummary.push(`  ・${company}：¥${total.toLocaleString()}`);
   }
 
-  // メール送信
-  if (emailTo && emailBody.length > 0) {
+  // メール送信（一覧URL1つだけ）
+  if (emailTo && hasNew) {
     const subject = `【Office DAIKOU】${targetYear}年${targetMonth}月分 請求書のご確認`;
-    const body = `お疲れ様です。\n\n${targetYear}年${targetMonth}月分の請求書URLをお送りします。\n\n` +
-      emailBody.join('\n') +
-      `\n各URLをクリックして内容をご確認の上、承認をお願いいたします。\n\n` +
+    const body = `お疲れ様です。\n\n` +
+      `${targetYear}年${targetMonth}月分の請求書をお送りします。\n\n` +
+      `▼ 対象企業（${companySummary.length}社）\n` +
+      companySummary.join('\n') + '\n' +
+      `\n  合計：¥${grandTotal.toLocaleString()}\n\n` +
+      `▼ 請求書一覧ページ\n` +
+      `${listPageUrl}\n\n` +
+      `上記URLから各社の請求内容を確認し、承認をお願いいたします。\n\n` +
       `---\nOffice DAIKOU（大晃工業合同会社）`;
 
     MailApp.sendEmail(emailTo, subject, body);
@@ -255,6 +259,61 @@ function handleGetInvoice(e) {
       items: items,
       approved: approved,
     });
+  } catch (err) {
+    return jsonResponse({ success: false, message: err.message });
+  }
+}
+
+// ===== 機能5b: 請求書一覧データ取得 =====
+
+function handleGetInvoiceList(e) {
+  try {
+    const year = parseInt(e.parameter.year);
+    const month = parseInt(e.parameter.month);
+
+    const ss = getSpreadsheet();
+    const dataSheet = getOrCreateSheet(ss, SHEET_NAME_DATA);
+    const invoiceSheet = getOrCreateSheet(ss, SHEET_NAME_INVOICE);
+
+    // 入力データから企業ごとに集計
+    const dataRows = dataSheet.getDataRange().getValues();
+    const companyMap = {};
+
+    for (let i = 1; i < dataRows.length; i++) {
+      const row = dataRows[i];
+      if (row[1] === year && row[2] === month) {
+        const company = row[4];
+        if (!companyMap[company]) {
+          companyMap[company] = { total: 0, count: 0 };
+        }
+        companyMap[company].total += row[9]; // 小計
+        companyMap[company].count += 1;
+      }
+    }
+
+    // 承認状態を確認
+    const invoiceRows = invoiceSheet.getDataRange().getValues();
+    const approvedCompanies = new Set();
+    for (let i = 1; i < invoiceRows.length; i++) {
+      if (invoiceRows[i][0] === year && invoiceRows[i][1] === month && invoiceRows[i][7] === '承認済み') {
+        approvedCompanies.add(invoiceRows[i][2]);
+      }
+    }
+
+    const companies = [];
+    for (const company in companyMap) {
+      companies.push({
+        company: company,
+        total: companyMap[company].total,
+        count: companyMap[company].count,
+        approved: approvedCompanies.has(company),
+      });
+    }
+
+    // 企業名でソート
+    companies.sort((a, b) => a.company.localeCompare(b.company, 'ja'));
+
+    return jsonResponse({ success: true, companies: companies });
   } catch (err) {
     return jsonResponse({ success: false, message: err.message });
   }
