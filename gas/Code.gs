@@ -30,7 +30,7 @@ function getOrCreateSheet(ss, name) {
     if (name === SHEET_NAME_DATA) {
       sheet.appendRow([
         'タイムスタンプ', '年', '月', '日', '企業名',
-        '現場名', '人数', '単価', '高速代', '小計', '承認ステータス'
+        '現場名', '人数', '駐車場代', '高速代', '小計', '承認ステータス'
       ]);
     }
     if (name === SHEET_NAME_INVOICE) {
@@ -107,7 +107,7 @@ function handleReceiveFormData(e) {
       data.company,     // E: 企業名
       data.site,        // F: 現場名
       data.workers,     // G: 人数
-      data.rate,        // H: 単価
+      data.rate,        // H: 駐車場代
       data.highway,     // I: 高速代
       subtotal,         // J: 小計
       '未承認'           // K: 承認ステータス
@@ -419,7 +419,7 @@ function generateAndSendPdf(company, year, month) {
       <p class="company">${escapeHtml_(company)} 御中</p>
       <table>
         <thead>
-          <tr><th>日付</th><th>現場名</th><th>人数</th><th>単価</th><th>高速代</th><th style="text-align:right">小計</th></tr>
+          <tr><th>日付</th><th>現場名</th><th>人数</th><th>駐車場代</th><th>高速代</th><th style="text-align:right">小計</th></tr>
         </thead>
         <tbody>
           ${items.map(item => `

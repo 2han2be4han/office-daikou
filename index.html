@@ -166,31 +166,7 @@
 
     .field-input::placeholder { color: var(--text-light); }
 
-    .field-textarea {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 15px;
-      font-family: var(--font);
-      color: var(--text);
-      background: var(--bg-input);
-      outline: none;
-      transition: 0.2s;
-      resize: vertical;
-      min-height: 80px;
-      line-height: 1.7;
-      -webkit-appearance: none;
-    }
-
-    .field-textarea:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(224, 120, 48, 0.1);
-    }
-
-    .field-textarea::placeholder { color: var(--text-light); }
-
-    .auth-error {
+.auth-error {
       color: var(--error);
       font-size: 13px;
       min-height: 22px;
@@ -669,7 +645,7 @@
     <div class="auth-card">
       <h1 class="auth-title"><span class="o">O</span>ffice DAIKOU</h1>
       <p class="auth-subtitle">by 大晃工業合同会社</p>
-      <p class="auth-desc">人工出し請求書自動生成ツール</p>
+      <p class="auth-desc">by 大晃工業合同会社</p>
 
       <form onsubmit="handleAuth(event)">
         <label class="field-label" for="authPassword">パスワード</label>
@@ -752,7 +728,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">単価 <span class="tag-required">必須</span></label>
+              <label class="form-label">駐車場代 <span class="tag-required">必須</span></label>
               <div class="input-unit-wrap">
                 <input type="number" id="inputRate" class="field-input" placeholder="0" required min="1" step="1">
                 <span class="input-unit">円</span>
@@ -768,14 +744,8 @@
             </div>
           </div>
 
-          <!-- コメント -->
-          <div class="form-section">
-            <div class="form-section-label">コメント</div>
-            <div class="form-group">
-              <label class="form-label">ひとこと</label>
-              <textarea id="inputComment" class="field-textarea" placeholder="例：今日もありがとうございます！安全作業お疲れ様でした！"></textarea>
-            </div>
-          </div>
+          <!-- コメント（固定） -->
+          <input type="hidden" id="inputComment" value="本日もありがとうございます。安全作業お疲れ様でした！">
 
           <button type="submit" class="form-submit" id="submitBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -908,7 +878,7 @@
 
       if (!data.company || !data.site) { showToast('すべての項目を入力してください', 'error'); return; }
       if (!data.workers || data.workers < 1) { showToast('人数を選択してください', 'error'); return; }
-      if (data.rate < 1) { showToast('単価は1以上を入力してください', 'error'); return; }
+      if (data.rate < 1) { showToast('駐車場代は1以上を入力してください', 'error'); return; }
       if (data.highway < 0) { showToast('高速代は0以上を入力してください', 'error'); return; }
 
       const sub = data.workers * data.rate + data.highway;
