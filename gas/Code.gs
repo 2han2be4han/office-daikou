@@ -4,13 +4,17 @@
  *
  * スクリプトプロパティに以下を設定してください：
  *   SHEET_ID            : GoogleスプレッドシートのID
- *   FORM_PASSWORD       : フォーム認証用パスワード
+ *   FORM_PASSWORD       : 応援業者用パスワード（index.html）
+ *   FORM_PASSWORD_SELF  : 自社用パスワード（invoice.html）
  *   PARENT_COMPANY_EMAIL: 親会社担当者のメールアドレス
  */
 
 // ===== 定数 =====
 const SHEET_NAME_DATA = '入力データ';
+const SHEET_NAME_DATA_SUPPORT = '入力データ（応援）';
+const SHEET_NAME_DATA_SELF = '入力データ（自社）';
 const SHEET_NAME_INVOICE = '請求書';
+const SHEET_NAME_EMPLOYEES = '従業員';
 
 // ===== ヘルパー =====
 
@@ -33,10 +37,29 @@ function getOrCreateSheet(ss, name) {
         '現場名', '人数', '駐車場代', '高速代', '小計', '承認ステータス'
       ]);
     }
+    if (name === SHEET_NAME_DATA_SUPPORT) {
+      sheet.appendRow([
+        'タイムスタンプ', '年', '月', '日', 'あなたの会社名',
+        '応援先会社名', '現場名', '人数', '作業員名',
+        '車台数', '駐車場代', '高速代', '小計', 'コメント', '承認ステータス'
+      ]);
+    }
+    if (name === SHEET_NAME_DATA_SELF) {
+      sheet.appendRow([
+        'タイムスタンプ', '年', '月', '日', '応援先会社名',
+        '現場名', '従業員名', '車台数', '駐車場代', '高速代', '小計', '承認ステータス'
+      ]);
+    }
     if (name === SHEET_NAME_INVOICE) {
       sheet.appendRow([
         '年', '月', '企業名', '合計金額', '請求書URL', '送信日時', '承認日時', '承認ステータス'
       ]);
+    }
+    if (name === SHEET_NAME_EMPLOYEES) {
+      sheet.appendRow(['名前']);
+      // サンプルデータ
+      const samples = ['Aさん', 'Bさん', 'Cさん', 'Dさん', 'Eさん', 'Fさん', 'Gさん', 'Hさん', 'Iさん', 'Jさん'];
+      samples.forEach(n => sheet.appendRow([n]));
     }
   }
   return sheet;
@@ -60,6 +83,8 @@ function doGet(e) {
       return handleGetInvoice(e);
     case 'invoicelist':
       return handleGetInvoiceList(e);
+    case 'employees':
+      return handleGetEmployees(e);
     default:
       return jsonResponse({ success: false, message: '不明なアクションです' });
   }
@@ -80,12 +105,30 @@ function doPost(e) {
 
 function handleAuth(e) {
   const password = e.parameter.password || '';
-  const correctPassword = getProps().getProperty('FORM_PASSWORD');
+  const formType = e.parameter.formType || 'support';
+  const props = getProps();
+
+  const correctPassword = formType === 'self'
+    ? props.getProperty('FORM_PASSWORD_SELF')
+    : props.getProperty('FORM_PASSWORD');
 
   if (password === correctPassword) {
     return jsonResponse({ success: true });
   }
   return jsonResponse({ success: false, message: 'パスワードが違います' });
+}
+
+// ===== 機能2: 従業員リスト取得 =====
+
+function handleGetEmployees(e) {
+  const ss = getSpreadsheet();
+  const sheet = getOrCreateSheet(ss, SHEET_NAME_EMPLOYEES);
+  const rows = sheet.getDataRange().getValues();
+  const employees = [];
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0]) employees.push(rows[i][0]);
+  }
+  return jsonResponse({ success: true, employees: employees });
 }
 
 // ===== 機能3: フォームデータ受信・スプレッドシート追記 =====
@@ -94,29 +137,94 @@ function handleReceiveFormData(e) {
   try {
     const data = JSON.parse(e.postData.contents);
     const ss = getSpreadsheet();
-    const sheet = getOrCreateSheet(ss, SHEET_NAME_DATA);
 
-    const timestamp = new Date();
-    const subtotal = data.workers * data.rate + data.highway;
+    if (data.formType === 'support') {
+      return handleSupportFormData(ss, data);
+    } else if (data.formType === 'self') {
+      return handleSelfFormData(ss, data);
+    }
 
-    sheet.appendRow([
-      timestamp,        // A: タイムスタンプ
-      data.year,        // B: 年
-      data.month,       // C: 月
-      data.day,         // D: 日
-      data.company,     // E: 企業名
-      data.site,        // F: 現場名
-      data.workers,     // G: 人数
-      data.rate,        // H: 駐車場代
-      data.highway,     // I: 高速代
-      subtotal,         // J: 小計
-      '未承認'           // K: 承認ステータス
-    ]);
-
-    return jsonResponse({ success: true, subtotal: subtotal });
+    // 旧フォーマット（後方互換）
+    return handleLegacyFormData(ss, data);
   } catch (err) {
     return jsonResponse({ success: false, message: err.message });
   }
+}
+
+function handleSupportFormData(ss, data) {
+  const sheet = getOrCreateSheet(ss, SHEET_NAME_DATA_SUPPORT);
+  const timestamp = new Date();
+  const subtotal = (data.parking || 0) + (data.highway || 0);
+  const workerNames = (data.workerNames || []).join(', ');
+
+  sheet.appendRow([
+    timestamp,           // A: タイムスタンプ
+    data.year,           // B: 年
+    data.month,          // C: 月
+    data.day,            // D: 日
+    data.myCompany,      // E: あなたの会社名
+    data.targetCompany,  // F: 応援先会社名
+    data.site,           // G: 現場名
+    data.workers,        // H: 人数
+    workerNames,         // I: 作業員名（カンマ区切り）
+    data.carCount,       // J: 車台数
+    data.parking || 0,   // K: 駐車場代
+    data.highway || 0,   // L: 高速代
+    subtotal,            // M: 小計
+    data.comment || '',  // N: コメント
+    '未承認'              // O: 承認ステータス
+  ]);
+
+  return jsonResponse({ success: true, subtotal: subtotal });
+}
+
+function handleSelfFormData(ss, data) {
+  const sheet = getOrCreateSheet(ss, SHEET_NAME_DATA_SELF);
+  const timestamp = new Date();
+  const subtotal = (data.parking || 0) + (data.highway || 0);
+  const employees = (data.employees || []).join(', ');
+  if (data.otherEmployee) {
+    const combined = employees ? employees + ', ' + data.otherEmployee : data.otherEmployee;
+  }
+
+  sheet.appendRow([
+    timestamp,           // A: タイムスタンプ
+    data.year,           // B: 年
+    data.month,          // C: 月
+    data.day,            // D: 日
+    data.targetCompany,  // E: 応援先会社名
+    data.site,           // F: 現場名
+    data.otherEmployee ? (employees ? employees + ', ' + data.otherEmployee : data.otherEmployee) : employees, // G: 従業員名
+    data.carCount,       // H: 車台数
+    data.parking || 0,   // I: 駐車場代
+    data.highway || 0,   // J: 高速代
+    subtotal,            // K: 小計
+    '未承認'              // L: 承認ステータス
+  ]);
+
+  return jsonResponse({ success: true, subtotal: subtotal });
+}
+
+function handleLegacyFormData(ss, data) {
+  const sheet = getOrCreateSheet(ss, SHEET_NAME_DATA);
+  const timestamp = new Date();
+  const subtotal = data.workers * data.rate + data.highway;
+
+  sheet.appendRow([
+    timestamp,        // A: タイムスタンプ
+    data.year,        // B: 年
+    data.month,       // C: 月
+    data.day,         // D: 日
+    data.company,     // E: 企業名
+    data.site,        // F: 現場名
+    data.workers,     // G: 人数
+    data.rate,        // H: 駐車場代
+    data.highway,     // I: 高速代
+    subtotal,         // J: 小計
+    '未承認'           // K: 承認ステータス
+  ]);
+
+  return jsonResponse({ success: true, subtotal: subtotal });
 }
 
 // ===== 機能4: 月初自動請求書URL生成＆メール送信 =====
@@ -197,17 +305,15 @@ function generateAndSendInvoiceUrls() {
   // メール送信（一覧URL1つだけ）
   if (emailTo && hasNew) {
     const subject = `【Office DAIKOU】${targetYear}年${targetMonth}月分 請求書のご確認`;
-    const body = `お疲れ様です。\n\n` +
-      `${targetYear}年${targetMonth}月分の請求書をお送りします。\n\n` +
-      `▼ 対象企業（${companySummary.length}社）\n` +
-      companySummary.join('\n') + '\n' +
-      `\n  合計：¥${grandTotal.toLocaleString()}\n\n` +
-      `▼ 請求書一覧ページ\n` +
-      `${listPageUrl}\n\n` +
-      `上記URLから各社の請求内容を確認し、承認をお願いいたします。\n\n` +
-      `---\nOffice DAIKOU（大晃工業合同会社）`;
+    const plainBody = `お疲れ様です。\n${targetYear}年${targetMonth}月分の請求書をお送りします。\n合計：¥${grandTotal.toLocaleString()}\n${listPageUrl}`;
+    const htmlBody = getInvoiceNotificationHtml_(targetYear, targetMonth, companySummary, grandTotal, listPageUrl);
 
-    MailApp.sendEmail(emailTo, subject, body);
+    MailApp.sendEmail({
+      to: emailTo,
+      subject: subject,
+      body: plainBody,
+      htmlBody: htmlBody,
+    });
   }
 }
 
@@ -448,10 +554,14 @@ function generateAndSendPdf(company, year, month) {
   // メール送信
   const emailTo = props.getProperty('PARENT_COMPANY_EMAIL');
   if (emailTo) {
+    const plainBody = `${company}の${year}年${month}月分の請求書が承認されました。\nPDFを添付しておりますのでご確認ください。`;
+    const htmlBody = getInvoiceApprovedHtml_(company, year, month, total, items);
+
     MailApp.sendEmail({
       to: emailTo,
       subject: `【Office DAIKOU】${company} ${year}年${month}月分 請求書（承認済み）`,
-      body: `${company}の${year}年${month}月分の請求書が承認されました。\nPDFを添付しておりますのでご確認ください。\n\n---\nOffice DAIKOU（大晃工業合同会社）`,
+      body: plainBody,
+      htmlBody: htmlBody,
       attachments: [blob],
     });
   }
@@ -464,6 +574,132 @@ function escapeHtml_(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+// ===== メールHTMLテンプレート =====
+
+function getInvoiceNotificationHtml_(year, month, companySummary, grandTotal, listPageUrl) {
+  const companyRows = companySummary.map(s => {
+    return `<tr><td style="padding:8px 12px; font-size:14px; color:#444; border-bottom:1px solid #eee;">${escapeHtml_(s.replace(/^\s+・/, ''))}</td></tr>`;
+  }).join('');
+
+  return `
+  <div style="font-family:'Helvetica Neue', Arial, 'Noto Sans JP', sans-serif; background-color:#f5f0ea; padding:40px 20px; color:#111;">
+    <div style="max-width:600px; margin:0 auto; background-color:#fff; border-radius:12px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.05); border:1px solid #e0dbd4;">
+      <div style="background-color:#222; padding:30px; text-align:center;">
+        <span style="color:#fff; font-size:24px; font-weight:800; letter-spacing:0.1em;"><em style="font-style:normal; color:#e07830;">O</em>ffice DAIKOU</span>
+      </div>
+      <div style="padding:40px 30px;">
+        <h1 style="font-size:20px; font-weight:700; color:#111; margin-bottom:24px;">請求書のご確認</h1>
+        <p style="font-size:16px; line-height:1.7; color:#444; margin-bottom:24px;">
+          お疲れ様です。<br>
+          <strong>${year}年${month}月分</strong>の請求書をお送りします。
+        </p>
+        <div style="background:#f5f0ea; border-radius:8px; padding:20px; margin-bottom:24px;">
+          <p style="font-size:12px; color:#888; font-weight:600; letter-spacing:1px; margin:0 0 12px;">対象企業（${companySummary.length}社）</p>
+          <table style="width:100%; border-collapse:collapse;">
+            ${companyRows}
+          </table>
+          <div style="margin-top:16px; padding-top:12px; border-top:2px solid #e0dbd4; text-align:right;">
+            <span style="font-size:12px; color:#888; margin-right:8px;">合計</span>
+            <span style="font-size:22px; font-weight:900; color:#222;">¥${grandTotal.toLocaleString()}</span>
+          </div>
+        </div>
+        <p style="font-size:16px; line-height:1.7; color:#444; margin-bottom:32px;">
+          下記ボタンから各社の請求内容を確認し、承認をお願いいたします。
+        </p>
+        <div style="text-align:center; margin-bottom:40px;">
+          <a href="${listPageUrl}" style="display:inline-block; background-color:#e07830; color:#fff; padding:18px 36px; border-radius:8px; font-size:16px; font-weight:700; text-decoration:none; box-shadow:0 8px 20px rgba(224,120,48,0.25);">
+            請求書一覧を確認する
+          </a>
+        </div>
+        <hr style="border:none; border-top:1px solid #e0dbd4; margin-bottom:32px;">
+        <p style="font-size:14px; color:#888; line-height:1.6;">
+          ※このメールは送信専用です。<br>
+          ご不明点がございましたら担当者までお問い合わせください。
+        </p>
+      </div>
+      <div style="background-color:#fafaf8; padding:30px; text-align:center; border-top:1px solid #e0dbd4;">
+        <p style="font-size:12px; color:#aaa; margin:0;">
+          &copy; 2026 diletto by AI Skill Exchange. All rights reserved.<br>
+          Office DAIKOU（大晃工業合同会社）
+        </p>
+      </div>
+    </div>
+  </div>`;
+}
+
+function getInvoiceApprovedHtml_(company, year, month, total, items) {
+  const tableRows = items.map(item => {
+    return `<tr>
+      <td style="padding:8px 10px; border-bottom:1px solid #eee; font-size:13px; color:#444;">${escapeHtml_(item.date)}</td>
+      <td style="padding:8px 10px; border-bottom:1px solid #eee; font-size:13px; color:#444;">${escapeHtml_(item.site)}</td>
+      <td style="padding:8px 10px; border-bottom:1px solid #eee; font-size:13px; color:#444; text-align:right;">${item.workers}</td>
+      <td style="padding:8px 10px; border-bottom:1px solid #eee; font-size:13px; color:#444; text-align:right;">&yen;${Number(item.rate).toLocaleString()}</td>
+      <td style="padding:8px 10px; border-bottom:1px solid #eee; font-size:13px; color:#444; text-align:right;">&yen;${Number(item.highway).toLocaleString()}</td>
+      <td style="padding:8px 10px; border-bottom:1px solid #eee; font-size:13px; color:#444; text-align:right; font-weight:600;">&yen;${Number(item.subtotal).toLocaleString()}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+  <div style="font-family:'Helvetica Neue', Arial, 'Noto Sans JP', sans-serif; background-color:#f5f0ea; padding:40px 20px; color:#111;">
+    <div style="max-width:600px; margin:0 auto; background-color:#fff; border-radius:12px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.05); border:1px solid #e0dbd4;">
+      <div style="background-color:#222; padding:30px; text-align:center;">
+        <span style="color:#fff; font-size:24px; font-weight:800; letter-spacing:0.1em;"><em style="font-style:normal; color:#e07830;">O</em>ffice DAIKOU</span>
+      </div>
+      <div style="padding:40px 30px;">
+        <div style="text-align:center; margin-bottom:24px;">
+          <div style="width:56px; height:56px; border-radius:50%; background:#e8f5ee; border:2px solid #b0d4be; display:inline-flex; align-items:center; justify-content:center;">
+            <span style="font-size:28px;">&#10003;</span>
+          </div>
+        </div>
+        <h1 style="font-size:20px; font-weight:700; color:#111; margin-bottom:8px; text-align:center;">承認が完了しました</h1>
+        <p style="font-size:14px; color:#888; text-align:center; margin-bottom:24px;">${year}年${month}月分</p>
+
+        <div style="background:#f5f0ea; border-radius:8px; padding:20px; margin-bottom:24px;">
+          <p style="font-size:16px; font-weight:700; color:#222; margin:0 0 4px;">${escapeHtml_(company)} 御中</p>
+          <p style="font-size:14px; color:#888; margin:0;">${items.length}件の明細</p>
+        </div>
+
+        <table style="width:100%; border-collapse:collapse; margin-bottom:16px;">
+          <thead>
+            <tr>
+              <th style="background:#222; color:#fff; padding:8px 10px; font-size:11px; font-weight:500; text-align:left;">日付</th>
+              <th style="background:#222; color:#fff; padding:8px 10px; font-size:11px; font-weight:500; text-align:left;">現場名</th>
+              <th style="background:#222; color:#fff; padding:8px 10px; font-size:11px; font-weight:500; text-align:right;">人数</th>
+              <th style="background:#222; color:#fff; padding:8px 10px; font-size:11px; font-weight:500; text-align:right;">駐車場代</th>
+              <th style="background:#222; color:#fff; padding:8px 10px; font-size:11px; font-weight:500; text-align:right;">高速代</th>
+              <th style="background:#222; color:#fff; padding:8px 10px; font-size:11px; font-weight:500; text-align:right;">小計</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+
+        <div style="text-align:right; padding-top:12px; border-top:2px solid #222;">
+          <span style="font-size:12px; color:#888; margin-right:8px;">合計金額</span>
+          <span style="font-size:24px; font-weight:900; color:#222;">&yen;${total.toLocaleString()}</span>
+        </div>
+
+        <p style="font-size:16px; line-height:1.7; color:#444; margin:24px 0 32px;">
+          PDFファイルをこのメールに添付しております。<br>
+          ご確認をお願いいたします。
+        </p>
+
+        <hr style="border:none; border-top:1px solid #e0dbd4; margin-bottom:32px;">
+        <p style="font-size:14px; color:#888; line-height:1.6;">
+          ※このメールは送信専用です。
+        </p>
+      </div>
+      <div style="background-color:#fafaf8; padding:30px; text-align:center; border-top:1px solid #e0dbd4;">
+        <p style="font-size:12px; color:#aaa; margin:0;">
+          &copy; 2026 diletto by AI Skill Exchange. All rights reserved.<br>
+          Office DAIKOU（大晃工業合同会社）
+        </p>
+      </div>
+    </div>
+  </div>`;
 }
 
 // ===== トリガー設定用関数 =====
