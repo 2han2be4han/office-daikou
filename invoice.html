@@ -992,9 +992,9 @@
       document.getElementById('authScreen').classList.remove('active');
       document.getElementById('mainContent').classList.add('active');
       initSelfForm();
-      // Check URL params for invoice
-      const p = getParams();
-      if (p.company || p.year) {
+      // Check URL params for invoice - only switch if explicitly specified
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('company') || urlParams.has('year')) {
         switchTab('invoice');
       }
     }
