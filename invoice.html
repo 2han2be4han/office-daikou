@@ -301,15 +301,24 @@
 
     /* Employee toggle buttons */
     .employee-count {
-      text-align: center;
-      font-size: 32px;
-      font-weight: 900;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 700;
       color: var(--text-light);
-      margin-bottom: 12px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 12px;
+      margin-left: 10px;
       transition: 0.3s;
+      vertical-align: middle;
     }
     .employee-count.has-selected {
       color: var(--green);
+      background: var(--green-light);
+      border-color: var(--green-border);
     }
     .employee-grid {
       display: flex;
@@ -803,8 +812,7 @@
             <div class="form-section">
               <div class="form-section-label">従業員</div>
               <div class="form-group">
-                <label class="form-label">登録済み従業員</label>
-                <div class="employee-count" id="employeeCount">0名 選択中</div>
+                <label class="form-label">登録済み従業員 <span class="employee-count" id="employeeCount">0名</span></label>
                 <div class="employee-grid" id="employeeGrid">
                   <div class="employee-loading">読み込み中...</div>
                 </div>
@@ -1086,7 +1094,7 @@
     function updateEmployeeCount() {
       const count = document.querySelectorAll('#employeeGrid .employee-btn.selected').length;
       const el = document.getElementById('employeeCount');
-      el.textContent = count + '名 選択中';
+      el.textContent = count + '名';
       el.classList.toggle('has-selected', count > 0);
     }
 
