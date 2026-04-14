@@ -229,10 +229,10 @@ function handleReceiveFormData(e) {
       const sheet = getOrCreateSheet(ss, SHEET_NAME_DATA_OWN);
       const subtotal = (data.amount * data.rate) + data.highway;
       sheet.appendRow([
-        new Date(), data.year, data.month, data.day, data.site,
+        new Date(), data.year, data.month, data.day, data.primeCompany || '', data.site,
         data.amount, data.rate, data.carCount, data.highway, subtotal, '未承認'
       ]);
-      return jsonResponse({ success: true, subtotal: data.highway });
+      return jsonResponse({ success: true, subtotal: subtotal });
     }
     
     // 自社から応援（invoice.html タブ2）
@@ -418,11 +418,11 @@ function handleGetInvoice(e) {
         if (row[1] === year && row[2] === month) {
           items.push({
             date: row[2] + '/' + row[3],
-            site: row[4],
-            workers: row[5],
-            rate: row[6],
-            highway: row[7],
-            subtotal: row[8],
+            site: (row[5] || '') + (row[4] ? ` (${row[4]})` : ''), // 現場名 (元受け)
+            workers: row[6],
+            rate: row[7],
+            highway: row[9],
+            subtotal: row[10],
           });
         }
       }
@@ -492,7 +492,7 @@ function handleGetInvoiceList(e) {
     const ownRows = ownSheet.getDataRange().getValues();
     const supportRows = supportSheet.getDataRange().getValues();
     for (let i = 1; i < ownRows.length; i++) {
-      if (ownRows[i][1] === year && ownRows[i][2] === month) rateMap[`${ownRows[i][3]}_${ownRows[i][4]}`] = ownRows[i][6] || 0;
+      if (ownRows[i][1] === year && ownRows[i][2] === month) rateMap[`${ownRows[i][3]}_${ownRows[i][5]}`] = ownRows[i][7] || 0;
     }
     for (let i = 1; i < supportRows.length; i++) {
       if (supportRows[i][1] === year && supportRows[i][2] === month && supportRows[i][4] === '自社') {
@@ -505,7 +505,7 @@ function handleGetInvoiceList(e) {
     let ownCount = 0;
     for (let i = 1; i < ownRows.length; i++) {
       if (ownRows[i][1] === year && ownRows[i][2] === month) {
-        ownTotal += ownRows[i][8] || 0;
+        ownTotal += ownRows[i][10] || 0; // 小計の列（インデックス10）
         ownCount++;
       }
     }
@@ -938,40 +938,6 @@ function setupMonthlyTrigger() {
     .create();
 }
 
-/**
- * スプレッドシートを見出し（列名）を含めて初期化します。
- * GASエディタでこの関数を選択して実行してください。
- */
-function initializeSpreadsheet() {
-  const ss = getSpreadsheet();
-  
-  const sheetConfigs = [
-    [SHEET_NAME_DATA_OWN, ['タイムスタンプ', '年', '月', '日', '現場名', '数量', '単価', '車台数', '高速代等', '小計', '承認ステータス']],
-    [SHEET_NAME_DATA_SUPPORT, ['タイムスタンプ', '年', '月', '日', '送信者', 'あなたの会社名(元)', '応援先会社名(先)', '現場名', '人数', '作業員名', '単価', '車台数', '高速代等', '小計', 'コメント', '承認ステータス']],
-    [SHEET_NAME_INVOICE, ['年', '月', '企業名', '合計金額', '請求書URL', '送信日時', '承認日時', '承認ステータス']],
-    [SHEET_NAME_EMPLOYEES, ['名前']],
-    [SHEET_NAME_TOKENS, ['トークン', '有効期限', '使用済み']],
-    [SHEET_NAME_CLIENT_SETTINGS, ['会社名', 'メールアドレス']]
-  ];
-
-  sheetConfigs.forEach(config => {
-    const [name, headers] = config;
-    let sheet = ss.getSheetByName(name);
-    if (!sheet) {
-      sheet = ss.insertSheet(name);
-    }
-    // シートが空の場合のみ見出しを書き込む
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(headers);
-      sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#f3f3f3');
-    }
-  });
-
-  // 従業員シートが空ならサンプルを追加
-  const empSheet = ss.getSheetByName(SHEET_NAME_EMPLOYEES);
-  if (empSheet.getLastRow() <= 1) {
-    ['Aさん', 'Bさん', 'Cさん'].forEach(n => empSheet.appendRow([n]));
-  }
-
-  Logger.log('スプレッドシートの初期設定が完了しました。');
+    .atHour(0)
+    .create();
 }

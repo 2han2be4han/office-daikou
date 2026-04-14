@@ -756,9 +756,16 @@
     </div>
   </div>
 
-  <!-- ===== Main Content (Form Only) ===== -->
+  <!-- ===== Main Content ===== -->
   <div class="main-content" id="mainContent">
-    <div class="form-banner">大晃工業合同会社 入力フォーム</div>
+    <div class="tab-bar">
+      <button class="tab active" id="mainTabInput" onclick="switchMainTab('input')">入力フォーム</button>
+      <button class="tab" id="mainTabDashboard" onclick="switchMainTab('dashboard')">プレビュー / 一覧</button>
+    </div>
+
+    <!-- Tab 1: Input Form -->
+    <div id="mainPanelInput" class="tab-panel active">
+      <div class="form-banner">大晃工業合同会社 入力フォーム</div>
 
     <div class="form-container">
       <div class="form-card">
@@ -811,7 +818,11 @@
             <div class="form-section">
               <div class="form-section-label">現場情報</div>
               <div class="form-group">
-                <label class="form-label">自社現場 <span class="tag-required">必須</span></label>
+                <label class="form-label">元受け企業名</label>
+                <input type="text" id="selfPrimeCompany" class="field-input" placeholder="例：株式会社△△建設">
+              </div>
+              <div class="form-group">
+                <label class="form-label">現場名 <span class="tag-required">必須</span></label>
                 <input type="text" id="selfOwnSite" class="field-input" placeholder="例：○○マンション新築工事">
               </div>
               <div class="form-group">
@@ -925,6 +936,73 @@
       </div>
     </div>
 
+    </div>
+
+    <!-- Tab 2: Dashboard -->
+    <div id="mainPanelDashboard" class="tab-panel">
+      <div class="page-header">
+        <h1 class="page-title">実績プレビュー</h1>
+        <p class="page-meta">スプレッドシートの内容を表示しています</p>
+      </div>
+
+      <div class="container">
+        <!-- 月選択 -->
+        <div style="display:flex; align-items:center; justify-content:center; gap:20px; margin-bottom:24px;">
+          <button class="nav-btn" onclick="changeDashboardMonth(-1)">←</button>
+          <div style="font-size:20px; font-weight:900;" id="dashboardMonthLabel">2026年4月</div>
+          <button class="nav-btn" onclick="changeDashboardMonth(1)">→</button>
+        </div>
+
+        <!-- 一覧表示 -->
+        <div id="dashboardListView">
+          <div class="list-card" id="dashboardListContent">
+            <div class="list-empty">読み込み中...</div>
+          </div>
+        </div>
+
+        <!-- 詳細表示 -->
+        <div id="dashboardDetailView" style="display:none;">
+          <button class="back-btn" onclick="showDashboardList()">← 一覧に戻る</button>
+          <div class="detail-card">
+            <div class="invoice-info">
+              <div>
+                <h3 id="invoiceCompany">-</h3>
+                <p id="invoicePeriod">-</p>
+              </div>
+              <div class="status-tag" id="invoiceStatus">未承認</div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="invoice-table">
+                <thead>
+                  <tr>
+                    <th>日付</th>
+                    <th>現場名</th>
+                    <th class="r">数量</th>
+                    <th class="r">単価</th>
+                    <th class="r">小計</th>
+                  </tr>
+                </thead>
+                <tbody id="invoiceTableBody"></tbody>
+              </table>
+            </div>
+
+            <div class="total-row">
+              <div class="total-label">合計金額</div>
+              <div class="total-amount" id="invoiceTotal">¥0</div>
+            </div>
+
+            <div id="approvedMsg" class="approved-msg" style="margin-top:20px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              承認済み
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <footer class="footer">
       <p>&copy; 2026 diletto by AI Skill Exchange. All rights reserved.</p>
     </footer>
@@ -970,7 +1048,118 @@
       document.getElementById('authScreen').classList.remove('active');
       document.getElementById('mainContent').classList.remove('active');
       if (screen === 'auth') document.getElementById('authScreen').classList.add('active');
-      if (screen === 'main') document.getElementById('mainContent').classList.add('active');
+      if (screen === 'main') {
+        document.getElementById('mainContent').classList.add('active');
+        switchMainTab('input');
+      }
+    }
+
+    function switchMainTab(tab) {
+      const tabInput = document.getElementById('mainTabInput');
+      const tabDash = document.getElementById('mainTabDashboard');
+      const panelInput = document.getElementById('mainPanelInput');
+      const panelDash = document.getElementById('mainPanelDashboard');
+
+      tabInput.classList.remove('active');
+      tabDash.classList.remove('active');
+      panelInput.classList.remove('active');
+      panelDash.classList.remove('active');
+
+      if (tab === 'input') {
+        tabInput.classList.add('active');
+        panelInput.classList.add('active');
+      } else {
+        tabDash.classList.add('active');
+        panelDash.classList.add('active');
+        renderDashboard();
+      }
+    }
+
+    // ===== Dashboard Logic =====
+    let dashboardDate = new Date();
+
+    function renderDashboard() {
+      document.getElementById('dashboardMonthLabel').textContent = `${dashboardDate.getFullYear()}年${dashboardDate.getMonth() + 1}月`;
+      loadDashboardList();
+    }
+
+    function changeDashboardMonth(delta) {
+      dashboardDate.setMonth(dashboardDate.getMonth() + delta);
+      showDashboardList();
+      renderDashboard();
+    }
+
+    function showDashboardList() {
+      document.getElementById('dashboardListView').style.display = 'block';
+      document.getElementById('dashboardDetailView').style.display = 'none';
+    }
+
+    function loadDashboardList() {
+      const container = document.getElementById('dashboardListContent');
+      container.innerHTML = '<div class="loading"><div class="spinner"></div>読み込み中...</div>';
+      
+      const y = dashboardDate.getFullYear();
+      const m = dashboardDate.getMonth() + 1;
+      
+      fetch(`${GAS_URL}?action=invoiceList&year=${y}&month=${m}`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data.success) { container.innerHTML = '<div class="list-empty">データ取得失敗</div>'; return; }
+          if (data.companies.length === 0) { container.innerHTML = '<div class="list-empty">該当月のデータがありません</div>'; return; }
+          
+          container.innerHTML = data.companies.map(c => `
+            <div class="list-item" onclick="loadDashboardDetail('${c.company}')">
+              <div class="list-item-main">
+                <div class="list-item-company">${c.company}</div>
+                <div class="list-item-detail">${c.count}件のデータ</div>
+              </div>
+              <div class="list-item-right">
+                <div class="list-item-amount">¥${c.total.toLocaleString()}</div>
+                <div class="status-tag ${c.approved ? 'approved' : ''}">${c.approved ? '承認済' : '未承認'}</div>
+              </div>
+              <div class="list-item-arrow">→</div>
+            </div>
+          `).join('');
+        })
+        .catch(() => { container.innerHTML = '<div class="list-empty">通信エラー</div>'; });
+    }
+
+    async function loadDashboardDetail(company) {
+      document.getElementById('dashboardListView').style.display = 'none';
+      document.getElementById('dashboardDetailView').style.display = 'block';
+      
+      document.getElementById('invoiceCompany').textContent = company;
+      const y = dashboardDate.getFullYear();
+      const m = dashboardDate.getMonth() + 1;
+      document.getElementById('invoicePeriod').textContent = `${y}年${m}月分`;
+      
+      const tbody = document.getElementById('invoiceTableBody');
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px;">読み込み中...</td></tr>';
+      
+      fetch(`${GAS_URL}?action=invoice&company=${encodeURIComponent(company)}&year=${y}&month=${m}`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data.success) { showToast('データ取得に失敗しました', 'error'); return; }
+          
+          tbody.innerHTML = data.items.map(item => `
+            <tr>
+              <td>${item.date}</td>
+              <td style="white-space:normal; font-weight:600;">${esc(item.site)}</td>
+              <td class="r">${item.workers}</td>
+              <td class="r">¥${item.rate.toLocaleString()}</td>
+              <td class="r" style="font-weight:700;">¥${item.subtotal.toLocaleString()}</td>
+            </tr>
+          `).join('');
+          
+          const total = data.items.reduce((sum, i) => sum + i.subtotal, 0);
+          document.getElementById('invoiceTotal').textContent = `¥${total.toLocaleString()}`;
+          
+          const status = document.getElementById('invoiceStatus');
+          status.textContent = data.approved ? '承認済' : '未承認';
+          status.className = 'status-tag' + (data.approved ? ' approved' : '');
+          document.getElementById('approvedMsg').classList.toggle('show', data.approved);
+        })
+        .catch(() => { showToast('通信エラーが発生しました', 'error'); });
     }
 
     // ===== Auth =====
@@ -1007,6 +1196,8 @@
       const now = new Date();
       document.getElementById('selfYear').value = now.getFullYear();
       document.getElementById('selfMonth').value = now.getMonth() + 1;
+      document.getElementById('selfEndYear').value = now.getFullYear();
+      document.getElementById('selfEndMonth').value = now.getMonth() + 1;
       loadEmployees();
     }
 
@@ -1113,6 +1304,7 @@
 
       if (formType === 'selfSite') {
         data.site = document.getElementById('selfOwnSite').value.trim();
+        data.primeCompany = document.getElementById('selfPrimeCompany').value.trim();
         data.rate = parseInt(document.getElementById('selfOwnRate').value);
         if (!data.site || isNaN(data.rate)) { showToast('入力不備があります', 'error'); return; }
         const mycar = document.getElementById('selfOwnCarCount').value;
@@ -1142,7 +1334,9 @@
 
     function resetSelfForm() {
       document.getElementById('selfDay').value = '';
-      document.getElementById('selfOwnSite').value = ''; document.getElementById('selfOwnRate').value = '';
+      document.getElementById('selfOwnSite').value = ''; 
+      document.getElementById('selfPrimeCompany').value = '';
+      document.getElementById('selfOwnRate').value = '';
       document.getElementById('selfTargetCompany').value = ''; document.getElementById('selfSite').value = '';
       document.querySelectorAll('#employeeGrid .employee-btn').forEach(b => b.classList.remove('selected'));
       updateEmployeeCount();
