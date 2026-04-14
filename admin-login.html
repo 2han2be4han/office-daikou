@@ -91,9 +91,15 @@
       <h2 style="margin-bottom:8px;">管理者ログイン</h2>
       <p style="font-size:13px; color:var(--text-sub); margin-bottom:24px;">どちらかのボタンを選択して、<br>ログインリンクを発行してください。</p>
       
-      <div style="display:flex; flex-direction:column; gap:12px;">
+      <div id="loginButtons" style="display:flex; flex-direction:column; gap:12px;">
         <button class="btn-primary" onclick="requestLink('admin')">大晃工業ログイン</button>
         <button class="btn-primary" onclick="requestLink('diletto')" style="background:var(--accent);">dilettoログイン</button>
+      </div>
+
+      <div id="verifyingView" style="display:none; padding:20px 0;">
+        <div class="spinner"></div>
+        <p style="margin-top:16px; font-weight:600; color:var(--text);">認証情報を確認しています...</p>
+        <p style="font-size:12px; color:var(--text-sub); margin-top:8px;">少々お待ちください</p>
       </div>
 
       <div id="loginLoading" style="display:none; margin-top:24px;">
@@ -156,6 +162,8 @@
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
     if (token) {
+      document.getElementById('loginButtons').style.display = 'none';
+      document.getElementById('verifyingView').style.display = 'block';
       verifyToken(token);
     } else if (sessionStorage.getItem('admin_token')) {
       showDashboard();
@@ -188,10 +196,14 @@
         window.history.replaceState({}, '', window.location.pathname);
         showDashboard();
       } else {
-        showToast('トークンが無効です', 'error');
+        showToast(data.message || 'トークンが無効です', 'error');
+        document.getElementById('loginButtons').style.display = 'flex';
+        document.getElementById('verifyingView').style.display = 'none';
       }
     } catch {
       showToast('通信エラー', 'error');
+      document.getElementById('loginButtons').style.display = 'flex';
+      document.getElementById('verifyingView').style.display = 'none';
     }
   }
 
