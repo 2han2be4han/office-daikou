@@ -937,3 +937,41 @@ function setupMonthlyTrigger() {
     .atHour(0)
     .create();
 }
+
+/**
+ * スプレッドシートを見出し（列名）を含めて初期化します。
+ * GASエディタでこの関数を選択して実行してください。
+ */
+function initializeSpreadsheet() {
+  const ss = getSpreadsheet();
+  
+  const sheetConfigs = [
+    [SHEET_NAME_DATA_OWN, ['タイムスタンプ', '年', '月', '日', '現場名', '数量', '単価', '車台数', '高速代等', '小計', '承認ステータス']],
+    [SHEET_NAME_DATA_SUPPORT, ['タイムスタンプ', '年', '月', '日', '送信者', 'あなたの会社名(元)', '応援先会社名(先)', '現場名', '人数', '作業員名', '単価', '車台数', '高速代等', '小計', 'コメント', '承認ステータス']],
+    [SHEET_NAME_INVOICE, ['年', '月', '企業名', '合計金額', '請求書URL', '送信日時', '承認日時', '承認ステータス']],
+    [SHEET_NAME_EMPLOYEES, ['名前']],
+    [SHEET_NAME_TOKENS, ['トークン', '有効期限', '使用済み']],
+    [SHEET_NAME_CLIENT_SETTINGS, ['会社名', 'メールアドレス']]
+  ];
+
+  sheetConfigs.forEach(config => {
+    const [name, headers] = config;
+    let sheet = ss.getSheetByName(name);
+    if (!sheet) {
+      sheet = ss.insertSheet(name);
+    }
+    // シートが空の場合のみ見出しを書き込む
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(headers);
+      sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#f3f3f3');
+    }
+  });
+
+  // 従業員シートが空ならサンプルを追加
+  const empSheet = ss.getSheetByName(SHEET_NAME_EMPLOYEES);
+  if (empSheet.getLastRow() <= 1) {
+    ['Aさん', 'Bさん', 'Cさん'].forEach(n => empSheet.appendRow([n]));
+  }
+
+  Logger.log('スプレッドシートの初期設定が完了しました。');
+}
