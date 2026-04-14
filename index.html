@@ -617,7 +617,7 @@
             <div class="form-section-label">人数</div>
 
             <div class="form-group">
-              <label class="form-label">人数 (最大5名、それ以上はその他) <span class="tag-required">必須</span></label>
+              <label class="form-label">人数 (最大5名、それ以上はその他) <span class="tag-required">必須</span> <span id="workersDisplay" class="workers-display">0名</span></label>
               <input type="hidden" id="inputWorkers" value="">
               <div class="number-grid" id="numberGrid"></div>
               <div style="display:flex; gap:8px; margin-top:8px;">
@@ -880,8 +880,10 @@
       document.querySelectorAll('.number-btn').forEach(b => b.classList.remove('selected'));
       selectedWorkers = null;
       const d = document.getElementById('workersDisplay');
-      d.textContent = '0名';
-      d.classList.remove('has-value');
+      if (d) {
+        d.textContent = '0名';
+        d.classList.remove('has-value');
+      }
       document.getElementById('inputYear').value = now.getFullYear();
       document.getElementById('inputMonth').value = now.getMonth() + 1;
     }
