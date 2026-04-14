@@ -729,8 +729,35 @@
     <a href="#" class="header-logo" onclick="event.preventDefault();"><span class="o">O</span>ffice DAIKOU</a>
   </header>
 
+  <!-- ===== Auth Screen ===== -->
+  <div class="auth-screen active" id="authScreen">
+    <div class="auth-card">
+      <h1 class="auth-title"><span class="o">O</span>ffice DAIKOU</h1>
+      <p class="auth-subtitle">by 大晃工業合同会社</p>
+      <p class="auth-desc">自社専用の入力フォームです</p>
+
+      <form onsubmit="handleAuth(event)">
+        <label class="field-label" for="authPassword">パスワード</label>
+        <input
+          type="tel"
+          id="authPassword"
+          class="field-input"
+          placeholder="数字を入力"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          autocomplete="current-password"
+          required
+        >
+        <div class="auth-error" id="authError"></div>
+        <button type="submit" class="btn-black" id="authBtn">ログイン</button>
+      </form>
+
+      <p class="auth-footer-text">管理者専用の入力ツールです</p>
+    </div>
+  </div>
+
   <!-- ===== Main Content (Form Only) ===== -->
-  <div class="main-content active" id="mainContent">
+  <div class="main-content" id="mainContent">
     <div class="form-banner">大晃工業合同会社 入力フォーム</div>
 
     <div class="form-container">
@@ -925,10 +952,55 @@
 
     let employeeList = [];
 
+    let isAuthenticated = false;
+
     // ===== Init =====
     document.addEventListener('DOMContentLoaded', () => {
+      if (sessionStorage.getItem('auth_self') === 'true') {
+        isAuthenticated = true;
+        showScreen('main');
+      } else {
+        showScreen('auth');
+      }
       initSelfForm();
     });
+
+    // ===== Navigation =====
+    function showScreen(screen) {
+      document.getElementById('authScreen').classList.remove('active');
+      document.getElementById('mainContent').classList.remove('active');
+      if (screen === 'auth') document.getElementById('authScreen').classList.add('active');
+      if (screen === 'main') document.getElementById('mainContent').classList.add('active');
+    }
+
+    // ===== Auth =====
+    function handleAuth(e) {
+      e.preventDefault();
+      const password = document.getElementById('authPassword').value;
+      const errorEl = document.getElementById('authError');
+      const btn = document.getElementById('authBtn');
+
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div>';
+      
+      fetch(GAS_URL + '?action=auth&password=' + encodeURIComponent(password) + '&formType=self')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            isAuthenticated = true;
+            sessionStorage.setItem('auth_self', 'true');
+            errorEl.textContent = '';
+            showScreen('main');
+          } else {
+            errorEl.textContent = 'パスワードが違います';
+          }
+        })
+        .catch(() => { errorEl.textContent = '通信エラーが発生しました'; })
+        .finally(() => { 
+          btn.disabled = false; 
+          btn.textContent = 'ログイン'; 
+        });
+    }
 
     // ===== Self Input Form =====
     function initSelfForm() {
