@@ -937,7 +937,3 @@ function setupMonthlyTrigger() {
     .atHour(0)
     .create();
 }
-
-    .atHour(0)
-    .create();
-}
