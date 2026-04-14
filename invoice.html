@@ -729,88 +729,110 @@
     <a href="#" class="header-logo" onclick="event.preventDefault();"><span class="o">O</span>ffice DAIKOU</a>
   </header>
 
-  <!-- ===== Auth Screen ===== -->
-  <div class="auth-screen active" id="authScreen">
-    <div class="auth-card">
-      <h1 class="auth-title"><span class="o">O</span>ffice DAIKOU</h1>
-      <p class="auth-subtitle">by 大晃工業合同会社</p>
-      <p class="auth-desc">自社用管理画面</p>
+  <!-- ===== Main Content (Form Only) ===== -->
+  <div class="main-content active" id="mainContent">
+    <div class="form-banner">大晃工業合同会社 入力フォーム</div>
 
-      <form onsubmit="handleAuth(event)">
-        <label class="field-label" for="authPassword">パスワード</label>
-        <input
-          type="tel"
-          id="authPassword"
-          class="field-input"
-          placeholder="数字4桁を入力"
-          inputmode="numeric"
-          pattern="[0-9]*"
-          maxlength="4"
-          autocomplete="current-password"
-          required
-        >
-        <div class="auth-error" id="authError"></div>
-        <button type="submit" class="btn-black" id="authBtn">ログイン</button>
-      </form>
+    <div class="form-container">
+      <div class="form-card">
+        <!-- サブタブ -->
+        <div style="display:flex; justify-content:center; margin-bottom:24px; border-radius:8px; background:var(--border-light); padding:4px;">
+          <button type="button" id="subTabSupportSite" onclick="switchSubTab('supportSite')" style="flex:1; padding:10px; border:none; background:var(--bg-white); border-radius:6px; font-weight:bold; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.1); color:var(--text); transition:0.2s;">応援現場</button>
+          <button type="button" id="subTabSelfSite" onclick="switchSubTab('selfSite')" style="flex:1; padding:10px; border:none; background:transparent; border-radius:6px; font-weight:bold; cursor:pointer; color:var(--text-sub); transition:0.2s;">自社受け持ち現場</button>
+        </div>
 
-      <p class="auth-footer-text">自社専用の管理ツールです</p>
-    </div>
-  </div>
+        <form id="selfForm" onsubmit="handleSelfSubmit(event)">
+          <input type="hidden" id="selfFormType" value="supportSite">
 
-  <!-- ===== Main Content (after auth) ===== -->
-  <div class="main-content" id="mainContent">
-
-    <!-- Tab Bar -->
-    <div class="tab-bar">
-      <button class="tab active" id="tabSelfInput" onclick="switchTab('selfInput')">自社入力</button>
-      <button class="tab" id="tabInvoice" onclick="switchTab('invoice')">請求書確認</button>
-    </div>
-
-    <!-- ===== Tab 1: Self Input Form ===== -->
-    <div class="tab-panel active" id="panelSelfInput">
-      <div class="form-banner">大晃工業合同会社 入力フォーム</div>
-
-      <div class="form-container">
-        <div class="form-card">
-          <form id="selfForm" onsubmit="handleSelfSubmit(event)">
-
-            <!-- 日付 -->
-            <div class="form-section">
-              <div class="form-section-label">日付</div>
-              <div class="form-group">
-                <div class="date-row">
-                  <div class="date-field">
-                    <input type="number" id="selfYear" class="field-input" placeholder="2026" required min="2020" max="2100">
-                    <span class="date-unit">年</span>
-                  </div>
-                  <div class="date-field">
-                    <input type="number" id="selfMonth" class="field-input" placeholder="4" required min="1" max="12">
-                    <span class="date-unit">月</span>
-                  </div>
-                  <div class="date-field">
-                    <input type="number" id="selfDay" class="field-input" placeholder="" required min="1" max="31">
-                    <span class="date-unit">日</span>
-                  </div>
+          <!-- 日付 -->
+          <div class="form-section">
+            <div class="form-section-label">日付</div>
+            <div class="form-group">
+              <div class="date-row" style="margin-bottom:12px;">
+                <div class="date-field">
+                  <input type="number" id="selfYear" class="field-input" placeholder="2026" required min="2020" max="2100">
+                  <span class="date-unit">年</span>
+                </div>
+                <div class="date-field">
+                  <input type="number" id="selfMonth" class="field-input" placeholder="4" required min="1" max="12">
+                  <span class="date-unit">月</span>
+                </div>
+                <div class="date-field">
+                  <input type="number" id="selfDay" class="field-input" placeholder="" required min="1" max="31">
+                  <span class="date-unit">日</span>
+                </div>
+              </div>
+              <div class="date-row" id="selfEndDateRow" style="display:none;">
+                <div class="date-field">
+                  <input type="number" id="selfEndYear" class="field-input" placeholder="" min="2020" max="2100">
+                  <span class="date-unit">年</span>
+                </div>
+                <div class="date-field">
+                  <input type="number" id="selfEndMonth" class="field-input" placeholder="" min="1" max="12">
+                  <span class="date-unit">月</span>
+                </div>
+                <div class="date-field">
+                  <input type="number" id="selfEndDay" class="field-input" placeholder="" min="1" max="31">
+                  <span class="date-unit">日</span>
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- 現場情報 -->
+          <!-- ■■■ 自社受け持ち現場用 ■■■ -->
+          <div id="selfSiteFields" style="display:none;">
+            <div class="form-section">
+              <div class="form-section-label">現場情報</div>
+              <div class="form-group">
+                <label class="form-label">自社現場 <span class="tag-required">必須</span></label>
+                <input type="text" id="selfOwnSite" class="field-input" placeholder="例：○○マンション新築工事">
+              </div>
+              <div class="form-group">
+                <label class="form-label">車の台数</label>
+                <input type="hidden" id="selfOwnCarCount" value="1台">
+                <div class="car-selector" id="selfOwnCarSelector">
+                  <div class="car-option selected" data-value="1台" onclick="selectSelfOwnCar(this)">1台</div>
+                  <div class="car-option" data-value="2台" onclick="selectSelfOwnCar(this)">2台</div>
+                  <div class="car-option" data-value="その他" onclick="selectSelfOwnCar(this)">その他</div>
+                </div>
+                <div class="car-other-input" id="selfOwnCarOtherWrap">
+                  <input type="number" id="selfOwnCarOther" class="field-input" placeholder="台数を入力" min="1" step="1">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">単価 (金額) <span class="tag-required">必須</span></label>
+                <div class="input-unit-wrap">
+                  <input type="number" id="selfOwnRate" class="field-input" placeholder="0" min="0" step="1">
+                  <span class="input-unit">円</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">高速代（駐車場代込）</label>
+                <div class="input-unit-wrap">
+                  <input type="number" id="selfOwnHighway" class="field-input" placeholder="0" min="0" step="1" value="0">
+                  <span class="input-unit">円</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ■■■ 応援現場用 ■■■ -->
+          <div id="supportSiteFields">
             <div class="form-section">
               <div class="form-section-label">現場情報</div>
               <div class="form-group">
                 <label class="form-label">応援に行った会社の名前 <span class="tag-required">必須</span></label>
-                <input type="text" id="selfTargetCompany" class="field-input" placeholder="例：△△工業" required>
+                <input type="text" id="selfTargetCompany" class="field-input" placeholder="例：△△工業">
               </div>
               <div class="form-group">
                 <label class="form-label">現場名 <span class="tag-required">必須</span></label>
-                <input type="text" id="selfSite" class="field-input" placeholder="例：□□マンション新築工事" required>
+                <input type="text" id="selfSite" class="field-input" placeholder="例：□□マンション新築工事">
               </div>
             </div>
 
             <!-- 従業員 -->
             <div class="form-section">
-              <div class="form-section-label">従業員</div>
+              <div class="form-section-label">従業員 (件数)</div>
               <div class="form-group">
                 <label class="form-label">登録済み従業員 <span class="employee-count" id="employeeCount">0名</span></label>
                 <div style="margin-bottom:8px;">
@@ -824,12 +846,18 @@
                 <label class="form-label">その他</label>
                 <input type="text" id="selfOtherEmployee" class="field-input" placeholder="登録外の作業員名">
               </div>
+              <div class="form-group">
+                <label class="form-label">単価 (1人あたり) <span class="tag-required">必須</span></label>
+                <div class="input-unit-wrap">
+                  <input type="number" id="selfSupportRate" class="field-input" placeholder="0" min="0" step="1">
+                  <span class="input-unit">円</span>
+                </div>
+              </div>
             </div>
 
             <!-- 車両・費用 -->
             <div class="form-section">
               <div class="form-section-label">車両・費用</div>
-
               <div class="form-group">
                 <label class="form-label">車の台数 <span class="tag-required">必須</span></label>
                 <input type="hidden" id="selfCarCount" value="">
@@ -839,111 +867,34 @@
                   <div class="car-option" data-value="その他" onclick="selectSelfCar(this)">その他</div>
                 </div>
                 <div class="car-other-input" id="selfCarOtherWrap">
-                  <input type="text" id="selfCarOther" class="field-input" placeholder="台数を入力">
+                  <input type="number" id="selfCarOther" class="field-input" placeholder="台数を入力" min="1" step="1">
                 </div>
               </div>
-
               <div class="form-group">
                 <label class="form-label">合計の駐車場代</label>
                 <div class="input-unit-wrap">
-                  <input type="number" id="selfParking" class="field-input" placeholder="0" min="0" step="1" value="0">
+                  <input type="number" id="selfSupportParking" class="field-input" placeholder="0" min="0" step="1" value="0">
                   <span class="input-unit">円</span>
                 </div>
               </div>
-
               <div class="form-group">
                 <label class="form-label">合計の高速代</label>
                 <div class="input-unit-wrap">
-                  <input type="number" id="selfHighway" class="field-input" placeholder="0" min="0" step="1" value="0">
+                  <input type="number" id="selfSupportHighway" class="field-input" placeholder="0" min="0" step="1" value="0">
                   <span class="input-unit">円</span>
                 </div>
               </div>
             </div>
-
-            <button type="submit" class="form-submit" id="selfSubmitBtn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13"/>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-              </svg>
-              送信する
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== Tab 2: Invoice List/Detail ===== -->
-    <div class="tab-panel" id="panelInvoice">
-
-      <!-- List View -->
-      <div id="listView">
-        <div class="page-header">
-          <h1 class="page-title">請求書一覧</h1>
-          <p class="page-meta" id="listMeta">読み込み中...</p>
-        </div>
-        <div class="container">
-          <div class="loading" id="listLoading">
-            <div class="spinner"></div>
-            <p>データを読み込んでいます...</p>
           </div>
-          <div id="listContent" style="display:none;">
-            <div class="list-card" id="listCard"></div>
-            <div class="list-summary" id="listSummary" style="display:none;">
-              <span class="list-summary-label">全社合計</span>
-              <span class="list-summary-amount" id="listTotalAmount">¥0</span>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Detail View -->
-      <div id="detailView" style="display:none;">
-        <div class="page-header">
-          <button class="back-btn" onclick="showList()">← 一覧に戻る</button>
-          <h1 class="page-title">請求書</h1>
-          <p class="page-meta" id="detailMeta"></p>
-        </div>
-        <div class="container">
-          <div class="detail-card">
-            <div class="invoice-info">
-              <div>
-                <h3 id="invoiceCompany">-</h3>
-                <p id="invoicePeriod">-</p>
-              </div>
-              <span class="status-tag" id="invoiceStatus">未承認</span>
-            </div>
-
-            <div class="table-wrap">
-              <table class="invoice-table">
-                <thead>
-                  <tr>
-                    <th>日付</th>
-                    <th>現場名</th>
-                    <th class="r">人数</th>
-                    <th class="r">駐車場代</th>
-                    <th class="r">高速代</th>
-                    <th class="r">小計</th>
-                  </tr>
-                </thead>
-                <tbody id="invoiceTableBody"></tbody>
-              </table>
-            </div>
-
-            <div class="total-row">
-              <span class="total-label">合計金額</span>
-              <span class="total-amount" id="invoiceTotalAmount">¥0</span>
-            </div>
-
-            <div class="actions" id="invoiceActions">
-              <button class="btn-approve" id="approveBtn" onclick="handleApproveInvoice()">承認する</button>
-            </div>
-
-            <div class="approved-msg" id="approvedMsg">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              承認済みです。PDFがメールで送信されました。
-            </div>
-          </div>
-        </div>
+          <button type="submit" class="form-submit" id="selfSubmitBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+            送信する
+          </button>
+        </form>
       </div>
     </div>
 
@@ -972,81 +923,12 @@
   <script>
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbwd-gmuQFm_CB82vMRA-g6KUJ_oQIkxzksjmYygtU1x2rUtXxeuAeXOgP78OCMY1s_JEQ/exec';
 
-    let currentYear, currentMonth;
-    let allCompanies = [];
     let employeeList = [];
-
-    // ===== Auth =====
-    function handleAuth(e) {
-      e.preventDefault();
-      const password = document.getElementById('authPassword').value;
-      const errorEl = document.getElementById('authError');
-      const btn = document.getElementById('authBtn');
-
-      if (!GAS_URL) {
-        if (password === '0501') {
-          sessionStorage.setItem('invoice_auth', 'true');
-          errorEl.textContent = '';
-          showMainContent();
-        } else {
-          errorEl.textContent = 'パスワードが違います';
-        }
-        return;
-      }
-
-      btn.disabled = true;
-      btn.innerHTML = '<div class="spinner-sm"></div>';
-      fetch(GAS_URL + '?action=auth&formType=self&password=' + encodeURIComponent(password))
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            sessionStorage.setItem('invoice_auth', 'true');
-            errorEl.textContent = '';
-            showMainContent();
-          } else {
-            errorEl.textContent = 'パスワードが違います';
-          }
-        })
-        .catch(() => { errorEl.textContent = '通信エラーが発生しました'; })
-        .finally(() => { btn.disabled = false; btn.textContent = 'ログイン'; });
-    }
-
-    function showMainContent() {
-      document.getElementById('authScreen').classList.remove('active');
-      document.getElementById('mainContent').classList.add('active');
-      initSelfForm();
-      // Check URL params for invoice - only switch if explicitly specified
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.has('company') || urlParams.has('year')) {
-        switchTab('invoice');
-      }
-    }
 
     // ===== Init =====
     document.addEventListener('DOMContentLoaded', () => {
-      if (sessionStorage.getItem('invoice_auth') === 'true') {
-        showMainContent();
-      }
+      initSelfForm();
     });
-
-    // ===== Tab Switching =====
-    function switchTab(tab) {
-      document.getElementById('tabSelfInput').classList.toggle('active', tab === 'selfInput');
-      document.getElementById('tabInvoice').classList.toggle('active', tab === 'invoice');
-      document.getElementById('panelSelfInput').classList.toggle('active', tab === 'selfInput');
-      document.getElementById('panelInvoice').classList.toggle('active', tab === 'invoice');
-
-      if (tab === 'invoice') {
-        const p = getParams();
-        currentYear = p.year;
-        currentMonth = p.month;
-        if (p.company) {
-          loadDetail(p.company, p.year, p.month);
-        } else {
-          loadList(p.year, p.month);
-        }
-      }
-    }
 
     // ===== Self Input Form =====
     function initSelfForm() {
@@ -1058,26 +940,14 @@
 
     function loadEmployees() {
       const grid = document.getElementById('employeeGrid');
-
       if (!GAS_URL) {
-        // Demo data
-        const demo = ['Aさん', 'Bさん', 'Cさん', 'Dさん', 'Eさん', 'Fさん', 'Gさん', 'Hさん', 'Iさん', 'Jさん'];
-        renderEmployees(demo);
+        renderEmployees(['Aさん', 'Bさん', 'Cさん']);
         return;
       }
-
       fetch(GAS_URL + '?action=employees')
         .then(r => r.json())
-        .then(d => {
-          if (d.success && d.employees) {
-            renderEmployees(d.employees);
-          } else {
-            grid.innerHTML = '<div class="employee-loading">従業員データの取得に失敗しました</div>';
-          }
-        })
-        .catch(() => {
-          grid.innerHTML = '<div class="employee-loading">通信エラー</div>';
-        });
+        .then(d => { if (d.success && d.employees) renderEmployees(d.employees); else grid.innerHTML = 'データ取得失敗'; })
+        .catch(() => { grid.innerHTML = '通信エラー'; });
     }
 
     function renderEmployees(employees) {
@@ -1101,15 +971,11 @@
       if (allSelected) {
         btns.forEach(b => b.classList.remove('selected'));
         selectAllBtn.textContent = '全員選択';
-        selectAllBtn.style.borderColor = 'var(--accent)';
         selectAllBtn.style.color = 'var(--accent)';
-        selectAllBtn.style.background = 'var(--bg-input)';
       } else {
         btns.forEach(b => b.classList.add('selected'));
         selectAllBtn.textContent = '全員解除';
-        selectAllBtn.style.borderColor = 'var(--green-border)';
         selectAllBtn.style.color = 'var(--green)';
-        selectAllBtn.style.background = 'var(--green-light)';
       }
       updateEmployeeCount();
     }
@@ -1121,239 +987,98 @@
       el.classList.toggle('has-selected', count > 0);
     }
 
+    function selectSelfOwnCar(el) {
+      document.querySelectorAll('#selfOwnCarSelector .car-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+      document.getElementById('selfOwnCarCount').value = el.dataset.value;
+      const otherWrap = document.getElementById('selfOwnCarOtherWrap');
+      if (el.dataset.value === 'その他') otherWrap.classList.add('show');
+      else { otherWrap.classList.remove('show'); document.getElementById('selfOwnCarOther').value = ''; }
+    }
+
     function selectSelfCar(el) {
       document.querySelectorAll('#selfCarSelector .car-option').forEach(o => o.classList.remove('selected'));
       el.classList.add('selected');
-      const val = el.dataset.value;
-      document.getElementById('selfCarCount').value = val;
+      document.getElementById('selfCarCount').value = el.dataset.value;
       const otherWrap = document.getElementById('selfCarOtherWrap');
-      if (val === 'その他') {
-        otherWrap.classList.add('show');
+      if (el.dataset.value === 'その他') otherWrap.classList.add('show');
+      else { otherWrap.classList.remove('show'); document.getElementById('selfCarOther').value = ''; }
+    }
+
+    function switchSubTab(tab) {
+      document.getElementById('selfFormType').value = tab;
+      const btnSelf = document.getElementById('subTabSelfSite');
+      const btnSupport = document.getElementById('subTabSupportSite');
+      const boxSelf = document.getElementById('selfSiteFields');
+      const boxSupport = document.getElementById('supportSiteFields');
+      if (tab === 'selfSite') {
+        btnSelf.style.background = 'var(--bg-white)'; btnSelf.style.color = 'var(--text)'; btnSelf.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        btnSupport.style.background = 'transparent'; btnSupport.style.color = 'var(--text-sub)'; btnSupport.style.boxShadow = 'none';
+        boxSelf.style.display = 'block'; boxSupport.style.display = 'none';
+        document.getElementById('selfEndDateRow').style.display = 'flex';
       } else {
-        otherWrap.classList.remove('show');
-        document.getElementById('selfCarOther').value = '';
+        btnSupport.style.background = 'var(--bg-white)'; btnSupport.style.color = 'var(--text)'; btnSupport.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        btnSelf.style.background = 'transparent'; btnSelf.style.color = 'var(--text-sub)'; btnSelf.style.boxShadow = 'none';
+        boxSupport.style.display = 'block'; boxSelf.style.display = 'none';
+        document.getElementById('selfEndDateRow').style.display = 'none';
       }
     }
 
     function handleSelfSubmit(e) {
       e.preventDefault();
       const btn = document.getElementById('selfSubmitBtn');
-      const carCount = document.getElementById('selfCarCount').value;
+      const formType = document.getElementById('selfFormType').value;
+      const sy = document.getElementById('selfYear').value;
+      const sm = document.getElementById('selfMonth').value;
+      const sd = document.getElementById('selfDay').value;
+      const em = document.getElementById('selfEndMonth').value;
+      const ed = document.getElementById('selfEndDay').value;
 
-      if (!document.getElementById('selfTargetCompany').value.trim()) { showToast('応援先の会社名を入力してください', 'error'); return; }
-      if (!document.getElementById('selfSite').value.trim()) { showToast('現場名を入力してください', 'error'); return; }
-      if (!carCount) { showToast('車の台数を選択してください', 'error'); return; }
+      let finalDay = sd;
+      if (ed) finalDay = (sm === em || !em) ? `${sd}〜${ed}` : `${sd}〜${em}/${ed}`;
 
-      // Collect selected employees
-      const selectedEmployees = [];
-      document.querySelectorAll('#employeeGrid .employee-btn.selected').forEach(btn => {
-        selectedEmployees.push(btn.textContent);
-      });
+      const data = { formType: formType, year: parseInt(sy), month: parseInt(sm), day: finalDay };
 
-      const finalCarCount = carCount === 'その他' ? document.getElementById('selfCarOther').value.trim() || 'その他' : carCount;
-
-      const data = {
-        formType: 'self',
-        year: parseInt(document.getElementById('selfYear').value),
-        month: parseInt(document.getElementById('selfMonth').value),
-        day: parseInt(document.getElementById('selfDay').value),
-        targetCompany: document.getElementById('selfTargetCompany').value.trim(),
-        site: document.getElementById('selfSite').value.trim(),
-        employees: selectedEmployees,
-        otherEmployee: document.getElementById('selfOtherEmployee').value.trim(),
-        carCount: finalCarCount,
-        parking: parseInt(document.getElementById('selfParking').value) || 0,
-        highway: parseInt(document.getElementById('selfHighway').value) || 0,
-      };
-
-      const subtotal = data.parking + data.highway;
-
-      if (!GAS_URL) {
-        showSelfSuccessModal(subtotal);
-        resetSelfForm();
-        return;
+      if (formType === 'selfSite') {
+        data.site = document.getElementById('selfOwnSite').value.trim();
+        data.rate = parseInt(document.getElementById('selfOwnRate').value);
+        if (!data.site || isNaN(data.rate)) { showToast('入力不備があります', 'error'); return; }
+        const mycar = document.getElementById('selfOwnCarCount').value;
+        data.carCount = mycar === 'その他' ? document.getElementById('selfOwnCarOther').value || 'その他' : mycar;
+        data.amount = 1; data.highway = parseInt(document.getElementById('selfOwnHighway').value) || 0;
+      } else {
+        data.targetCompany = document.getElementById('selfTargetCompany').value.trim();
+        data.site = document.getElementById('selfSite').value.trim();
+        data.rate = parseInt(document.getElementById('selfSupportRate').value);
+        const carCount = document.getElementById('selfCarCount').value;
+        if (!data.targetCompany || !data.site || isNaN(data.rate) || !carCount) { showToast('入力不備があります', 'error'); return; }
+        const selectedEmployees = [];
+        document.querySelectorAll('#employeeGrid .employee-btn.selected').forEach(b => selectedEmployees.push(b.textContent));
+        data.employees = selectedEmployees;
+        data.otherEmployee = document.getElementById('selfOtherEmployee').value.trim();
+        data.carCount = carCount === 'その他' ? document.getElementById('selfCarOther').value || 'その他' : carCount;
+        data.highway = (parseInt(document.getElementById('selfSupportHighway').value) || 0) + (parseInt(document.getElementById('selfSupportParking').value) || 0);
       }
 
-      btn.disabled = true;
-      btn.innerHTML = '<div class="spinner-sm"></div> 送信中...';
-      fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+      btn.disabled = true; btn.innerHTML = '送信中...';
+      fetch(GAS_URL, { method: 'POST', body: JSON.stringify(data) })
         .then(res => res.json())
-        .then(r => { if (r.success) { showSelfSuccessModal(subtotal); resetSelfForm(); } else { showToast(r.message || '送信に失敗しました', 'error'); } })
-        .catch(() => { showToast('通信エラーが発生しました', 'error'); })
-        .finally(() => {
-          btn.disabled = false;
-          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> 送信する';
-        });
+        .then(r => { if (r.success) { showSelfSuccessModal(data.highway); resetSelfForm(); } else showToast('失敗', 'error'); })
+        .catch(() => showToast('通信エラー', 'error'))
+        .finally(() => { btn.disabled = false; btn.innerHTML = '送信する'; });
     }
 
     function resetSelfForm() {
-      const now = new Date();
       document.getElementById('selfDay').value = '';
-      document.getElementById('selfTargetCompany').value = '';
-      document.getElementById('selfSite').value = '';
-      document.getElementById('selfOtherEmployee').value = '';
-      document.getElementById('selfParking').value = '0';
-      document.getElementById('selfHighway').value = '0';
-      document.getElementById('selfCarCount').value = '';
-      document.getElementById('selfCarOther').value = '';
-      document.querySelectorAll('#selfCarSelector .car-option').forEach(o => o.classList.remove('selected'));
-      document.getElementById('selfCarOtherWrap').classList.remove('show');
+      document.getElementById('selfOwnSite').value = ''; document.getElementById('selfOwnRate').value = '';
+      document.getElementById('selfTargetCompany').value = ''; document.getElementById('selfSite').value = '';
       document.querySelectorAll('#employeeGrid .employee-btn').forEach(b => b.classList.remove('selected'));
       updateEmployeeCount();
-      document.getElementById('selfYear').value = now.getFullYear();
-      document.getElementById('selfMonth').value = now.getMonth() + 1;
     }
 
     function showSelfSuccessModal(subtotal) {
-      document.getElementById('modalSubtotal').textContent = '駐車場代+高速代 合計: ¥' + subtotal.toLocaleString();
+      document.getElementById('modalSubtotal').textContent = '合計費用: ¥' + subtotal.toLocaleString();
       document.getElementById('successModal').classList.add('open');
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeSuccessModal() {
-      document.getElementById('successModal').classList.remove('open');
-      document.body.style.overflow = '';
-    }
-
-    // ===== Invoice List/Detail (unchanged logic) =====
-    function getParams() {
-      const p = new URLSearchParams(window.location.search);
-      return {
-        company: p.get('company') || '',
-        year: parseInt(p.get('year')) || new Date().getFullYear(),
-        month: parseInt(p.get('month')) || (new Date().getMonth() || 12),
-      };
-    }
-
-    function loadList(year, month) {
-      document.getElementById('listMeta').textContent = year + '年' + month + '月分';
-      document.getElementById('listView').style.display = 'block';
-      document.getElementById('detailView').style.display = 'none';
-
-      if (!GAS_URL) { showDemoList(); return; }
-
-      fetch(GAS_URL + '?action=invoiceList&year=' + year + '&month=' + month)
-        .then(r => r.json())
-        .then(d => { if (d.success) renderList(d.companies); else showToast('データの取得に失敗しました', 'error'); })
-        .catch(() => showToast('通信エラーが発生しました', 'error'));
-    }
-
-    function renderList(companies) {
-      document.getElementById('listLoading').style.display = 'none';
-      document.getElementById('listContent').style.display = 'block';
-      const card = document.getElementById('listCard');
-      card.innerHTML = '';
-      allCompanies = companies;
-
-      if (companies.length === 0) {
-        card.innerHTML = '<div class="list-empty">この月の請求データはありません</div>';
-        return;
-      }
-
-      let grandTotal = 0;
-
-      companies.forEach(c => {
-        grandTotal += c.total;
-        const a = document.createElement('a');
-        a.className = 'list-item';
-        a.href = '#';
-        a.onclick = (e) => { e.preventDefault(); showDetail(c.company); };
-        a.innerHTML =
-          '<div class="list-item-main">' +
-            '<div class="list-item-company">' + esc(c.company) + '</div>' +
-            '<div class="list-item-detail">' + c.count + '件の明細</div>' +
-          '</div>' +
-          '<div class="list-item-right">' +
-            '<span class="list-item-amount">¥' + c.total.toLocaleString() + '</span>' +
-            '<span class="status-tag ' + (c.approved ? 'approved' : '') + '">' + (c.approved ? '承認済' : '未承認') + '</span>' +
-          '</div>' +
-          '<span class="list-item-arrow">›</span>';
-        card.appendChild(a);
-      });
-
-      document.getElementById('listSummary').style.display = 'flex';
-      document.getElementById('listTotalAmount').textContent = '¥' + grandTotal.toLocaleString();
-    }
-
-    function showDemoList() {
-      const companies = [
-        { company: 'サンプル建設株式会社', total: 282000, count: 5, approved: false },
-        { company: 'テスト工務店', total: 156000, count: 3, approved: true },
-        { company: 'ABC建設株式会社', total: 98000, count: 2, approved: false },
-      ];
-      renderList(companies);
-    }
-
-    function showDetail(company) {
-      document.getElementById('listView').style.display = 'none';
-      document.getElementById('detailView').style.display = 'block';
-      window.scrollTo(0, 0);
-      loadDetail(company, currentYear, currentMonth);
-    }
-
-    function showList() {
-      document.getElementById('detailView').style.display = 'none';
-      document.getElementById('listView').style.display = 'block';
-      window.scrollTo(0, 0);
-      if (allCompanies.length > 0) renderList(allCompanies);
-    }
-
-    function loadDetail(company, year, month) {
-      document.getElementById('detailMeta').textContent = company + ' - ' + year + '年' + month + '月分';
-      document.getElementById('invoiceCompany').textContent = company + ' 御中';
-      document.getElementById('invoicePeriod').textContent = year + '年' + month + '月分 請求書';
-      document.getElementById('invoiceActions').style.display = 'block';
-      document.getElementById('approvedMsg').classList.remove('show');
-      document.getElementById('invoiceStatus').textContent = '未承認';
-      document.getElementById('invoiceStatus').classList.remove('approved');
-      const btn = document.getElementById('approveBtn');
-      btn.disabled = false;
-      btn.textContent = '承認する';
-
-      if (!GAS_URL) { renderDetail(getDemoDetail(company)); return; }
-
-      fetch(GAS_URL + '?action=invoice&company=' + encodeURIComponent(company) + '&year=' + year + '&month=' + month)
-        .then(r => r.json())
-        .then(d => { if (d.success) renderDetail(d); else showToast('データの取得に失敗しました', 'error'); })
-        .catch(() => showToast('通信エラーが発生しました', 'error'));
-    }
-
-    function renderDetail(data) {
-      const tbody = document.getElementById('invoiceTableBody');
-      tbody.innerHTML = '';
-      let total = 0;
-      data.items.forEach(item => {
-        const sub = item.workers * item.rate + item.highway;
-        total += sub;
-        const tr = document.createElement('tr');
-        tr.innerHTML = '<td>' + item.month + '/' + item.day + '</td><td>' + esc(item.site) + '</td><td class="r">' + item.workers + '</td><td class="r">' + item.rate.toLocaleString() + '</td><td class="r">' + item.highway.toLocaleString() + '</td><td class="r">' + sub.toLocaleString() + '</td>';
-        tbody.appendChild(tr);
-      });
-      document.getElementById('invoiceTotalAmount').textContent = '¥' + total.toLocaleString();
-      if (data.approved) setApproved(data.company);
-    }
-
-    function getDemoDetail(company) {
-      if (company === 'テスト工務店') return { company: company, items: [
-        { month:3, day:8, site:'××駅前再開発', workers:3, rate:20000, highway:0 },
-        { month:3, day:12, site:'××駅前再開発', workers:4, rate:20000, highway:0 },
-        { month:3, day:20, site:'□□公園整備', workers:2, rate:18000, highway:0 },
-      ], approved: true };
-      if (company === 'ABC建設株式会社') return { company: company, items: [
-        { month:3, day:14, site:'△△橋補修工事', workers:3, rate:16000, highway:2000 },
-        { month:3, day:25, site:'△△橋補修工事', workers:2, rate:16000, highway:2000 },
-      ], approved: false };
-      return { company: company, items: [
-        { month:3, day:3, site:'○○マンション新築工事', workers:3, rate:18000, highway:1200 },
-        { month:3, day:5, site:'○○マンション新築工事', workers:2, rate:18000, highway:1200 },
-        { month:3, day:10, site:'△△ビル改修工事', workers:4, rate:20000, highway:0 },
-        { month:3, day:15, site:'○○マンション新築工事', workers:3, rate:18000, highway:1200 },
-        { month:3, day:22, site:'□□倉庫解体工事', workers:5, rate:17000, highway:2400 },
-      ], approved: false };
-    }
-
-    // Approve
-    function handleApproveInvoice() {
       const btn = document.getElementById('approveBtn');
       const company = document.getElementById('invoiceCompany').textContent.replace(' 御中', '');
 

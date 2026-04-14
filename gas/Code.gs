@@ -10,11 +10,13 @@
  */
 
 // ===== 定数 =====
-const SHEET_NAME_DATA = '入力データ';
-const SHEET_NAME_DATA_SUPPORT = '入力データ（応援）';
-const SHEET_NAME_DATA_SELF = '入力データ（自社）';
+const SHEET_NAME_DATA_OWN = '自社の現場';
+const SHEET_NAME_DATA_SUPPORT = '応援現場';
 const SHEET_NAME_INVOICE = '請求書';
 const SHEET_NAME_EMPLOYEES = '従業員';
+const SHEET_NAME_TOKENS = '認証トークン';
+const SHEET_NAME_CLIENT_SETTINGS = '取引先設定';
+const SHEET_NAME_DATA = '入力データ'; // 旧互換
 
 // ===== ヘルパー =====
 
@@ -31,23 +33,16 @@ function getOrCreateSheet(ss, name) {
   let sheet = ss.getSheetByName(name);
   if (!sheet) {
     sheet = ss.insertSheet(name);
-    if (name === SHEET_NAME_DATA) {
+    if (name === SHEET_NAME_DATA_OWN) {
       sheet.appendRow([
-        'タイムスタンプ', '年', '月', '日', '企業名',
-        '現場名', '人数', '駐車場代', '高速代', '小計', '承認ステータス'
+        'タイムスタンプ', '年', '月', '日', '現場名',
+        '数量', '単価', '車台数', '高速代等', '小計', '承認ステータス'
       ]);
     }
     if (name === SHEET_NAME_DATA_SUPPORT) {
       sheet.appendRow([
-        'タイムスタンプ', '年', '月', '日', 'あなたの会社名',
-        '応援先会社名', '現場名', '人数', '作業員名',
-        '車台数', '駐車場代', '高速代', '小計', 'コメント', '承認ステータス'
-      ]);
-    }
-    if (name === SHEET_NAME_DATA_SELF) {
-      sheet.appendRow([
-        'タイムスタンプ', '年', '月', '日', '応援先会社名',
-        '現場名', '従業員名', '車台数', '駐車場代', '高速代', '小計', '承認ステータス'
+        'タイムスタンプ', '年', '月', '日', '送信者', 'あなたの会社名(元)', '応援先会社名(先)',
+        '現場名', '人数', '作業員名', '単価', '車台数', '高速代等', '小計', 'コメント', '承認ステータス'
       ]);
     }
     if (name === SHEET_NAME_INVOICE) {
@@ -57,7 +52,6 @@ function getOrCreateSheet(ss, name) {
     }
     if (name === SHEET_NAME_EMPLOYEES) {
       sheet.appendRow(['名前']);
-      // サンプルデータ
       const samples = ['Aさん', 'Bさん', 'Cさん', 'Dさん', 'Eさん', 'Fさん', 'Gさん', 'Hさん', 'Iさん', 'Jさん'];
       samples.forEach(n => sheet.appendRow([n]));
     }
@@ -79,12 +73,18 @@ function doGet(e) {
   switch (action) {
     case 'auth':
       return handleAuth(e);
+    case 'requestmagiclink':
+      return handleRequestMagicLink(e);
+    case 'verifytoken':
+      return handleVerifyToken(e);
     case 'invoice':
       return handleGetInvoice(e);
     case 'invoicelist':
       return handleGetInvoiceList(e);
     case 'employees':
       return handleGetEmployees(e);
+    case 'getclientemail':
+      return handleGetClientEmail(e);
     default:
       return jsonResponse({ success: false, message: '不明なアクションです' });
   }
@@ -95,6 +95,10 @@ function doPost(e) {
 
   if (action === 'approve') {
     return handleApprove(e);
+  }
+  if (action === 'saveclientemail') {
+    const data = JSON.parse(e.postData.contents);
+    return handleSaveClientEmail(data.company, data.email);
   }
 
   // デフォルト：フォームデータ受信
@@ -118,6 +122,88 @@ function handleAuth(e) {
   return jsonResponse({ success: false, message: 'パスワードが違います' });
 }
 
+function handleRequestMagicLink(e) {
+  const type = (e.parameter.type || 'admin').toLowerCase();
+  const props = getProps();
+  const adminEmail = props.getProperty('PARENT_COMPANY_EMAIL');
+  const dilettoEmail = '2han2be4han@gmail.com';
+  
+  const targetEmail = (type === 'diletto') ? dilettoEmail : adminEmail;
+  if (!targetEmail) return jsonResponse({ success: false, message: '送信先メールアドレスが設定されていません' });
+
+  const token = Utilities.getUuid();
+  const expires = new Date();
+  expires.setMinutes(expires.getMinutes() + 5); // 5分間有効
+
+  const ss = getSpreadsheet();
+  const sheet = getOrCreateSheet(ss, SHEET_NAME_TOKENS);
+  sheet.appendRow([token, expires, false]);
+
+  const subject = `【Office DAIKOU】管理画面ログインリンク (${type === 'diletto' ? 'diletto' : '大晃工業'})`;
+  const plainBody = `お疲れ様です。\n管理画面へのログイン用トークンを発行しました。\n\nトークン: ${token}\n有効期限: 5分 (${expires.toLocaleString()})`;
+  const htmlBody = getMagicLinkHtml_(type, token, expires);
+  
+  try {
+    MailApp.sendEmail({
+      to: targetEmail,
+      subject: subject,
+      body: plainBody,
+      htmlBody: htmlBody
+    });
+    return jsonResponse({ success: true, message: `${type === 'diletto' ? 'diletto' : '大晃工業'}宛にメールを送信しました` });
+  } catch (err) {
+    return jsonResponse({ success: false, message: 'メール送信に失敗しました: ' + err.message });
+  }
+}
+
+function handleVerifyToken(e) {
+  const token = e.parameter.token || '';
+  const ss = getSpreadsheet();
+  const sheet = getOrCreateSheet(ss, SHEET_NAME_TOKENS);
+  const rows = sheet.getDataRange().getValues();
+  const now = new Date();
+
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0] === token && !rows[i][2]) {
+      const expires = new Date(rows[i][1]);
+      if (now < expires) {
+        // 使用済みにする
+        sheet.getRange(i + 1, 3).setValue(true);
+        return jsonResponse({ success: true });
+      }
+    }
+  }
+  return jsonResponse({ success: false, message: 'トークンが無効または期限切れです' });
+}
+
+// ===== 取引先メール管理 =====
+
+function handleGetClientEmail(e) {
+  const company = e.parameter.company || '';
+  const ss = getSpreadsheet();
+  const sheet = getOrCreateSheet(ss, SHEET_NAME_CLIENT_SETTINGS);
+  const rows = sheet.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0] === company) return jsonResponse({ success: true, email: rows[i][1] });
+  }
+  return jsonResponse({ success: true, email: '' });
+}
+
+function handleSaveClientEmail(company, email) {
+  if (!company) return jsonResponse({ success: false, message: '会社名が指定されていません' });
+  const ss = getSpreadsheet();
+  const sheet = getOrCreateSheet(ss, SHEET_NAME_CLIENT_SETTINGS);
+  const rows = sheet.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0] === company) {
+      sheet.getRange(i + 1, 2).setValue(email);
+      return jsonResponse({ success: true });
+    }
+  }
+  sheet.appendRow([company, email]);
+  return jsonResponse({ success: true });
+}
+
 // ===== 機能2: 従業員リスト取得 =====
 
 function handleGetEmployees(e) {
@@ -138,10 +224,44 @@ function handleReceiveFormData(e) {
     const data = JSON.parse(e.postData.contents);
     const ss = getSpreadsheet();
 
+    // 自社受け持ち現場（invoice.html タブ1）
+    if (data.formType === 'selfSite') {
+      const sheet = getOrCreateSheet(ss, SHEET_NAME_DATA_OWN);
+      const subtotal = (data.amount * data.rate) + data.highway;
+      sheet.appendRow([
+        new Date(), data.year, data.month, data.day, data.site,
+        data.amount, data.rate, data.carCount, data.highway, subtotal, '未承認'
+      ]);
+      return jsonResponse({ success: true, subtotal: data.highway });
+    }
+    
+    // 自社から応援（invoice.html タブ2）
+    if (data.formType === 'supportSite') {
+      const sheet = getOrCreateSheet(ss, SHEET_NAME_DATA_SUPPORT);
+      const employees = (data.employees || []).join(', ');
+      const workerStr = data.otherEmployee ? (employees ? employees + ', ' + data.otherEmployee : data.otherEmployee) : employees;
+      const count = (data.employees || []).length + (data.otherEmployee ? 1 : 0);
+      const workersCount = count > 0 ? count : 1;
+      const subtotal = (workersCount * data.rate) + data.highway;
+      
+      sheet.appendRow([
+        new Date(), data.year, data.month, data.day, '自社', '大晃工業', data.targetCompany,
+        data.site, workersCount, workerStr, data.rate || 0, data.carCount, data.highway || 0, subtotal, '', '未承認'
+      ]);
+      return jsonResponse({ success: true, subtotal: data.highway });
+    }
+
+    // 他社から応援（index.html）
     if (data.formType === 'support') {
-      return handleSupportFormData(ss, data);
-    } else if (data.formType === 'self') {
-      return handleSelfFormData(ss, data);
+      const sheet = getOrCreateSheet(ss, SHEET_NAME_DATA_SUPPORT);
+      const workerNames = (data.workerNames || []).join(', ');
+      const highwayAndParking = (data.parking || 0) + (data.highway || 0);
+      // index.htmlからの入力は単価がないので0、小計も0(あとで補完)
+      sheet.appendRow([
+        new Date(), data.year, data.month, data.day, '他社', data.myCompany, data.targetCompany,
+        data.site, data.workers, workerNames, 0, data.carCount, highwayAndParking, 0, data.comment || '', '未承認'
+      ]);
+      return jsonResponse({ success: true, subtotal: highwayAndParking });
     }
 
     // 旧フォーマット（後方互換）
@@ -149,60 +269,6 @@ function handleReceiveFormData(e) {
   } catch (err) {
     return jsonResponse({ success: false, message: err.message });
   }
-}
-
-function handleSupportFormData(ss, data) {
-  const sheet = getOrCreateSheet(ss, SHEET_NAME_DATA_SUPPORT);
-  const timestamp = new Date();
-  const subtotal = (data.parking || 0) + (data.highway || 0);
-  const workerNames = (data.workerNames || []).join(', ');
-
-  sheet.appendRow([
-    timestamp,           // A: タイムスタンプ
-    data.year,           // B: 年
-    data.month,          // C: 月
-    data.day,            // D: 日
-    data.myCompany,      // E: あなたの会社名
-    data.targetCompany,  // F: 応援先会社名
-    data.site,           // G: 現場名
-    data.workers,        // H: 人数
-    workerNames,         // I: 作業員名（カンマ区切り）
-    data.carCount,       // J: 車台数
-    data.parking || 0,   // K: 駐車場代
-    data.highway || 0,   // L: 高速代
-    subtotal,            // M: 小計
-    data.comment || '',  // N: コメント
-    '未承認'              // O: 承認ステータス
-  ]);
-
-  return jsonResponse({ success: true, subtotal: subtotal });
-}
-
-function handleSelfFormData(ss, data) {
-  const sheet = getOrCreateSheet(ss, SHEET_NAME_DATA_SELF);
-  const timestamp = new Date();
-  const subtotal = (data.parking || 0) + (data.highway || 0);
-  const employees = (data.employees || []).join(', ');
-  if (data.otherEmployee) {
-    const combined = employees ? employees + ', ' + data.otherEmployee : data.otherEmployee;
-  }
-
-  sheet.appendRow([
-    timestamp,           // A: タイムスタンプ
-    data.year,           // B: 年
-    data.month,          // C: 月
-    data.day,            // D: 日
-    data.targetCompany,  // E: 応援先会社名
-    data.site,           // F: 現場名
-    data.otherEmployee ? (employees ? employees + ', ' + data.otherEmployee : data.otherEmployee) : employees, // G: 従業員名
-    data.carCount,       // H: 車台数
-    data.parking || 0,   // I: 駐車場代
-    data.highway || 0,   // J: 高速代
-    subtotal,            // K: 小計
-    '未承認'              // L: 承認ステータス
-  ]);
-
-  return jsonResponse({ success: true, subtotal: subtotal });
 }
 
 function handleLegacyFormData(ss, data) {
@@ -326,24 +392,60 @@ function handleGetInvoice(e) {
     const month = parseInt(e.parameter.month);
 
     const ss = getSpreadsheet();
-    const dataSheet = getOrCreateSheet(ss, SHEET_NAME_DATA);
+    const ownSheet = getOrCreateSheet(ss, SHEET_NAME_DATA_OWN);
+    const supportSheet = getOrCreateSheet(ss, SHEET_NAME_DATA_SUPPORT);
     const invoiceSheet = getOrCreateSheet(ss, SHEET_NAME_INVOICE);
 
-    // 入力データからフィルタ
-    const dataRows = dataSheet.getDataRange().getValues();
     const items = [];
+    let payableTotal = 0;
 
-    for (let i = 1; i < dataRows.length; i++) {
-      const row = dataRows[i];
-      if (row[1] === year && row[2] === month && row[4] === company) {
-        items.push({
-          month: row[2],
-          day: row[3],
-          site: row[5],
-          workers: row[6],
-          rate: row[7],
-          highway: row[8],
-        });
+    // 自社の単価辞書を作成 (キー: "日付_現場名", 値: 単価)
+    const rateMap = {};
+    const ownRows = ownSheet.getDataRange().getValues();
+    const supportRows = supportSheet.getDataRange().getValues();
+    for (let i = 1; i < ownRows.length; i++) {
+      if (ownRows[i][1] === year && ownRows[i][2] === month) rateMap[`${ownRows[i][3]}_${ownRows[i][4]}`] = ownRows[i][6] || 0;
+    }
+    for (let i = 1; i < supportRows.length; i++) {
+      if (supportRows[i][1] === year && supportRows[i][2] === month && supportRows[i][4] === '自社') {
+        rateMap[`${supportRows[i][3]}_${supportRows[i][7]}`] = supportRows[i][10] || 0;
+      }
+    }
+
+    if (company === '【自社現場】') {
+      for (let i = 1; i < ownRows.length; i++) {
+        const row = ownRows[i];
+        if (row[1] === year && row[2] === month) {
+          items.push({
+            date: row[2] + '/' + row[3],
+            site: row[4],
+            workers: row[5],
+            rate: row[6],
+            highway: row[7],
+            subtotal: row[8],
+          });
+        }
+      }
+    } else {
+      for (let i = 1; i < supportRows.length; i++) {
+        const row = supportRows[i];
+        if (row[1] === year && row[2] === month) {
+          if (row[4] === '自社' && row[6] === company) {
+            items.push({
+              date: row[2] + '/' + row[3],
+              site: row[7],
+              workers: row[8],
+              rate: row[10],
+              highway: row[12],
+              subtotal: row[13],
+            });
+          } else if (row[4] === '他社' && row[5] === company) {
+            const matchedRate = rateMap[`${row[3]}_${row[7]}`] || 0;
+            const workers = row[8] || 1;
+            const hw = row[12] || 0;
+            payableTotal += (workers * matchedRate) + hw;
+          }
+        }
       }
     }
 
@@ -363,6 +465,7 @@ function handleGetInvoice(e) {
       year: year,
       month: month,
       items: items,
+      payable: payableTotal,
       approved: approved,
     });
   } catch (err) {
@@ -378,22 +481,55 @@ function handleGetInvoiceList(e) {
     const month = parseInt(e.parameter.month);
 
     const ss = getSpreadsheet();
-    const dataSheet = getOrCreateSheet(ss, SHEET_NAME_DATA);
+    const ownSheet = getOrCreateSheet(ss, SHEET_NAME_DATA_OWN);
+    const supportSheet = getOrCreateSheet(ss, SHEET_NAME_DATA_SUPPORT);
     const invoiceSheet = getOrCreateSheet(ss, SHEET_NAME_INVOICE);
 
-    // 入力データから企業ごとに集計
-    const dataRows = dataSheet.getDataRange().getValues();
     const companyMap = {};
 
-    for (let i = 1; i < dataRows.length; i++) {
-      const row = dataRows[i];
+    // 自社の単価辞書を作成
+    const rateMap = {};
+    const ownRows = ownSheet.getDataRange().getValues();
+    const supportRows = supportSheet.getDataRange().getValues();
+    for (let i = 1; i < ownRows.length; i++) {
+      if (ownRows[i][1] === year && ownRows[i][2] === month) rateMap[`${ownRows[i][3]}_${ownRows[i][4]}`] = ownRows[i][6] || 0;
+    }
+    for (let i = 1; i < supportRows.length; i++) {
+      if (supportRows[i][1] === year && supportRows[i][2] === month && supportRows[i][4] === '自社') {
+        rateMap[`${supportRows[i][3]}_${supportRows[i][7]}`] = supportRows[i][10] || 0;
+      }
+    }
+
+    // 1. 自社現場
+    let ownTotal = 0;
+    let ownCount = 0;
+    for (let i = 1; i < ownRows.length; i++) {
+      if (ownRows[i][1] === year && ownRows[i][2] === month) {
+        ownTotal += ownRows[i][8] || 0;
+        ownCount++;
+      }
+    }
+    if (ownCount > 0) {
+      companyMap['【自社現場】'] = { total: ownTotal, count: ownCount, payable: 0 };
+    }
+
+    // 2. 応援現場
+    for (let i = 1; i < supportRows.length; i++) {
+      const row = supportRows[i];
       if (row[1] === year && row[2] === month) {
-        const company = row[4];
-        if (!companyMap[company]) {
-          companyMap[company] = { total: 0, count: 0 };
+        if (row[4] === '自社') {
+          const company = row[6];
+          if (!companyMap[company]) companyMap[company] = { total: 0, count: 0, payable: 0 };
+          companyMap[company].total += row[13] || 0;
+          companyMap[company].count++;
+        } else if (row[4] === '他社') {
+          const company = row[5];
+          if (!companyMap[company]) companyMap[company] = { total: 0, count: 0, payable: 0 };
+          const matchedRate = rateMap[`${row[3]}_${row[7]}`] || 0;
+          const workers = row[8] || 1;
+          const hw = row[12] || 0;
+          companyMap[company].payable += (workers * matchedRate) + hw;
         }
-        companyMap[company].total += row[9]; // 小計
-        companyMap[company].count += 1;
       }
     }
 
@@ -412,11 +548,11 @@ function handleGetInvoiceList(e) {
         company: company,
         total: companyMap[company].total,
         count: companyMap[company].count,
+        payable: companyMap[company].payable || 0,
         approved: approvedCompanies.has(company),
       });
     }
 
-    // 企業名でソート
     companies.sort((a, b) => a.company.localeCompare(b.company, 'ja'));
 
     return jsonResponse({ success: true, companies: companies });
@@ -459,10 +595,19 @@ function handleApprove(e) {
     invoiceSheet.getRange(invoiceRowIdx, 8).setValue('承認済み');
 
     // 入力データの承認ステータスも更新
-    const dataRows = dataSheet.getDataRange().getValues();
-    for (let i = 1; i < dataRows.length; i++) {
-      if (dataRows[i][1] === year && dataRows[i][2] === month && dataRows[i][4] === company) {
-        dataSheet.getRange(i + 1, 11).setValue('承認済み'); // K列
+    if (company === '【自社現場】') {
+      const ownSheet = getOrCreateSheet(ss, SHEET_NAME_DATA_OWN);
+      const ownRows = ownSheet.getDataRange().getValues();
+      for (let i = 1; i < ownRows.length; i++) {
+        if (ownRows[i][1] === year && ownRows[i][2] === month) ownSheet.getRange(i + 1, 10).setValue('承認済み'); // J列
+      }
+    } else {
+      const supportSheet = getOrCreateSheet(ss, SHEET_NAME_DATA_SUPPORT);
+      const supportRows = supportSheet.getDataRange().getValues();
+      for (let i = 1; i < supportRows.length; i++) {
+        if (supportRows[i][1] === year && supportRows[i][2] === month && supportRows[i][6] === company && supportRows[i][4] === '自社') {
+          supportSheet.getRange(i + 1, 16).setValue('承認済み'); // P列
+        }
       }
     }
 
@@ -477,27 +622,30 @@ function handleApprove(e) {
 
 function generateAndSendPdf(company, year, month) {
   const ss = getSpreadsheet();
-  const dataSheet = getOrCreateSheet(ss, SHEET_NAME_DATA);
+  const ownSheet = getOrCreateSheet(ss, SHEET_NAME_DATA_OWN);
+  const supportSheet = getOrCreateSheet(ss, SHEET_NAME_DATA_SUPPORT);
   const props = getProps();
 
-  // 対象データ取得
-  const dataRows = dataSheet.getDataRange().getValues();
   const items = [];
   let total = 0;
 
-  for (let i = 1; i < dataRows.length; i++) {
-    const row = dataRows[i];
-    if (row[1] === year && row[2] === month && row[4] === company) {
-      const subtotal = row[9];
-      total += subtotal;
-      items.push({
-        date: `${row[2]}/${row[3]}`,
-        site: row[5],
-        workers: row[6],
-        rate: row[7],
-        highway: row[8],
-        subtotal: subtotal,
-      });
+  if (company === '【自社現場】') {
+    const ownRows = ownSheet.getDataRange().getValues();
+    for (let i = 1; i < ownRows.length; i++) {
+      const row = ownRows[i];
+      if (row[1] === year && row[2] === month) {
+        items.push({ date: row[2] + '/' + row[3], site: row[4], workers: row[5], rate: row[6], highway: row[7], subtotal: row[8] });
+        total += row[8] || 0;
+      }
+    }
+  } else {
+    const supportRows = supportSheet.getDataRange().getValues();
+    for (let i = 1; i < supportRows.length; i++) {
+      const row = supportRows[i];
+      if (row[1] === year && row[2] === month && row[4] === '自社' && row[6] === company) {
+        items.push({ date: row[2] + '/' + row[3], site: row[7], workers: row[8], rate: row[10], highway: row[12], subtotal: row[13] });
+        total += row[13] || 0;
+      }
     }
   }
 
@@ -505,43 +653,76 @@ function generateAndSendPdf(company, year, month) {
   const html = `
     <html>
     <head>
+      <meta charset="UTF-8">
       <style>
-        body { font-family: 'Noto Sans JP', sans-serif; padding: 40px; color: #1e293b; }
-        h1 { font-size: 24px; text-align: center; margin-bottom: 8px; color: #1a2744; }
-        .meta { text-align: center; color: #64748b; margin-bottom: 32px; font-size: 14px; }
-        .company { font-size: 18px; font-weight: bold; margin-bottom: 24px; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { background: #1a2744; color: white; padding: 8px 10px; text-align: left; }
-        th:last-child { text-align: right; }
-        td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; }
-        .right { text-align: right; }
-        .total { text-align: right; font-size: 20px; font-weight: bold; margin-top: 16px; padding-top: 16px; border-top: 2px solid #1a2744; }
-        .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #94a3b8; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
+        body { font-family: 'Noto Sans JP', sans-serif; padding: 40px; color: #333; background: #fff; }
+        .header { border-bottom: 3px solid #111; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .logo { font-size: 28px; font-weight: 900; letter-spacing: -0.02em; color: #111; }
+        .logo span { color: #3b82f6; }
+        .title-box { text-align: right; }
+        .title { font-size: 32px; font-weight: 900; margin: 0; color: #111; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+        .bill-to { font-size: 18px; font-weight: 700; border-bottom: 1px solid #111; padding-bottom: 8px; }
+        .company-info { font-size: 13px; line-height: 1.6; text-align: right; }
+        table { width: 100%; border-collapse: collapse; margin-block: 30px; }
+        th { background: #111; color: #fff; padding: 12px 10px; font-size: 12px; font-weight: 700; text-align: left; }
+        td { padding: 12px 10px; border-bottom: 1px solid #eee; font-size: 13px; }
+        .r { text-align: right; }
+        .total-box { margin-left: auto; width: 300px; padding: 20px; background: #f8f7f5; border-radius: 8px; text-align: right; }
+        .total-label { font-size: 14px; color: #666; font-weight: 700; }
+        .total-val { font-size: 28px; font-weight: 900; color: #111; margin-top: 4px; }
+        .footer-note { margin-top: 60px; font-size: 11px; color: #999; text-align: center; }
       </style>
     </head>
     <body>
-      <h1>請求書</h1>
-      <p class="meta">${year}年${month}月分</p>
-      <p class="company">${escapeHtml_(company)} 御中</p>
+      <div class="header">
+        <div class="logo">di<span>let</span>to</div>
+        <div class="title-box">
+          <p style="font-size: 12px; color: #666; margin:0;">${year}年${month}月分</p>
+          <h1 class="title">請求書</h1>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div class="bill-to">
+          ${escapeHtml_(company)} 御中
+        </div>
+      </div>
+
       <table>
         <thead>
-          <tr><th>日付</th><th>現場名</th><th>人数</th><th>駐車場代</th><th>高速代</th><th style="text-align:right">小計</th></tr>
+          <tr>
+            <th>日付</th>
+            <th>現場名</th>
+            <th class="r">人数/数量</th>
+            <th class="r">単価</th>
+            <th class="r">高速等</th>
+            <th class="r">小計</th>
+          </tr>
         </thead>
         <tbody>
           ${items.map(item => `
             <tr>
               <td>${item.date}</td>
-              <td>${escapeHtml_(item.site)}</td>
-              <td class="right">${item.workers}</td>
-              <td class="right">¥${Number(item.rate).toLocaleString()}</td>
-              <td class="right">¥${Number(item.highway).toLocaleString()}</td>
-              <td class="right">¥${Number(item.subtotal).toLocaleString()}</td>
+              <td style="font-weight:700;">${escapeHtml_(item.site)}</td>
+              <td class="r">${item.workers}</td>
+              <td class="r">¥${Number(item.rate).toLocaleString()}</td>
+              <td class="r">¥${Number(item.highway).toLocaleString()}</td>
+              <td class="r" style="font-weight:700;">¥${Number(item.subtotal).toLocaleString()}</td>
             </tr>
           `).join('')}
         </tbody>
       </table>
-      <p class="total">合計金額: ¥${total.toLocaleString()}</p>
-      <p class="footer">Office DAIKOU（大晃工業合同会社）</p>
+
+      <div class="total-box">
+        <p class="total-label">合計金額 (税込)</p>
+        <p class="total-val">¥${total.toLocaleString()}</p>
+      </div>
+
+      <div class="footer-note">
+        Office DAIKOU by 大晃工業合同会社 / diletto
+      </div>
     </body>
     </html>
   `;
@@ -552,7 +733,18 @@ function generateAndSendPdf(company, year, month) {
     .setName(`請求書_${company}_${year}年${month}月.pdf`);
 
   // メール送信
-  const emailTo = props.getProperty('PARENT_COMPANY_EMAIL');
+  let emailTo = props.getProperty('PARENT_COMPANY_EMAIL');
+  
+  // 取引先設定から個別メールアドレスを取得
+  const clientSheet = getOrCreateSheet(ss, SHEET_NAME_CLIENT_SETTINGS);
+  const clientRows = clientSheet.getDataRange().getValues();
+  for (let i = 1; i < clientRows.length; i++) {
+    if (clientRows[i][0] === company && clientRows[i][1]) {
+      emailTo = clientRows[i][1];
+      break;
+    }
+  }
+
   if (emailTo) {
     const plainBody = `${company}の${year}年${month}月分の請求書が承認されました。\nPDFを添付しておりますのでご確認ください。`;
     const htmlBody = getInvoiceApprovedHtml_(company, year, month, total, items);
@@ -580,49 +772,43 @@ function escapeHtml_(str) {
 
 function getInvoiceNotificationHtml_(year, month, companySummary, grandTotal, listPageUrl) {
   const companyRows = companySummary.map(s => {
-    return `<tr><td style="padding:8px 12px; font-size:14px; color:#444; border-bottom:1px solid #eee;">${escapeHtml_(s.replace(/^\s+・/, ''))}</td></tr>`;
+    return `<tr><td style="padding:12px 14px; font-size:15px; color:#333; border-bottom:1px solid #f0f0f0; font-weight:500;">${escapeHtml_(s.replace(/^\s+・/, ''))}</td></tr>`;
   }).join('');
 
   return `
-  <div style="font-family:'Helvetica Neue', Arial, 'Noto Sans JP', sans-serif; background-color:#f5f0ea; padding:40px 20px; color:#111;">
-    <div style="max-width:600px; margin:0 auto; background-color:#fff; border-radius:12px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.05); border:1px solid #e0dbd4;">
-      <div style="background-color:#222; padding:30px; text-align:center;">
-        <span style="color:#fff; font-size:24px; font-weight:800; letter-spacing:0.1em;"><em style="font-style:normal; color:#e07830;">O</em>ffice DAIKOU</span>
+  <div style="font-family:'Helvetica Neue', Arial, 'Noto Sans JP', sans-serif; background-color:#f8f7f5; padding:50px 20px; color:#111;">
+    <div style="max-width:600px; margin:0 auto; background-color:#fff; border-radius:16px; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.06);">
+      <div style="background-color:#111; padding:40px; text-align:center;">
+        <span style="color:#fff; font-size:32px; font-weight:900; letter-spacing:-0.02em;">di<span style="color:#3b82f6;">let</span>to</span>
       </div>
-      <div style="padding:40px 30px;">
-        <h1 style="font-size:20px; font-weight:700; color:#111; margin-bottom:24px;">請求書のご確認</h1>
-        <p style="font-size:16px; line-height:1.7; color:#444; margin-bottom:24px;">
+      <div style="padding:50px 40px;">
+        <h1 style="font-size:24px; font-weight:900; color:#111; margin-bottom:8px;">請求書のご確認</h1>
+        <p style="font-size:15px; color:#888; margin-bottom:32px;">${year}年${month}月分</p>
+        
+        <p style="font-size:16px; line-height:1.7; color:#333; margin-bottom:32px;">
           お疲れ様です。<br>
-          <strong>${year}年${month}月分</strong>の請求書をお送りします。
+          以下の通り請求明細が届いています。内容を確認し、承認をお願いいたします。
         </p>
-        <div style="background:#f5f0ea; border-radius:8px; padding:20px; margin-bottom:24px;">
-          <p style="font-size:12px; color:#888; font-weight:600; letter-spacing:1px; margin:0 0 12px;">対象企業（${companySummary.length}社）</p>
-          <table style="width:100%; border-collapse:collapse;">
+
+        <div style="background:#f8f7f5; border-radius:12px; padding:24px; margin-bottom:40px;">
+          <p style="font-size:12px; color:#aaa; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; margin:0 0 16px;">Summary</p>
+          <table style="width:100%; border-collapse:collapse; background:#fff; border-radius:8px; overflow:hidden;">
             ${companyRows}
           </table>
-          <div style="margin-top:16px; padding-top:12px; border-top:2px solid #e0dbd4; text-align:right;">
-            <span style="font-size:12px; color:#888; margin-right:8px;">合計</span>
-            <span style="font-size:22px; font-weight:900; color:#222;">¥${grandTotal.toLocaleString()}</span>
+          <div style="margin-top:24px; text-align:right;">
+            <p style="font-size:12px; color:#aaa; margin:0;">Grand Total</p>
+            <p style="font-size:28px; font-weight:900; color:#111; margin:0;">¥${grandTotal.toLocaleString()}</p>
           </div>
         </div>
-        <p style="font-size:16px; line-height:1.7; color:#444; margin-bottom:32px;">
-          下記ボタンから各社の請求内容を確認し、承認をお願いいたします。
-        </p>
-        <div style="text-align:center; margin-bottom:40px;">
-          <a href="${listPageUrl}" style="display:inline-block; background-color:#e07830; color:#fff; padding:18px 36px; border-radius:8px; font-size:16px; font-weight:700; text-decoration:none; box-shadow:0 8px 20px rgba(224,120,48,0.25);">
-            請求書一覧を確認する
+
+        <div style="text-align:center; margin-bottom:48px;">
+          <a href="${listPageUrl}" style="display:inline-block; background-color:#111; color:#fff; padding:20px 40px; border-radius:10px; font-size:16px; font-weight:800; text-decoration:none; box-shadow:0 10px 20px rgba(0,0,0,0.15);">
+            一覧ページを開く
           </a>
         </div>
-        <hr style="border:none; border-top:1px solid #e0dbd4; margin-bottom:32px;">
-        <p style="font-size:14px; color:#888; line-height:1.6;">
-          ※このメールは送信専用です。<br>
-          ご不明点がございましたら担当者までお問い合わせください。
-        </p>
-      </div>
-      <div style="background-color:#fafaf8; padding:30px; text-align:center; border-top:1px solid #e0dbd4;">
-        <p style="font-size:12px; color:#aaa; margin:0;">
-          &copy; 2026 diletto by AI Skill Exchange. All rights reserved.<br>
-          Office DAIKOU（大晃工業合同会社）
+
+        <p style="font-size:14px; color:#bbb; line-height:1.6; text-align:center;">
+          Office DAIKOU by 大晃工業合同会社 / diletto
         </p>
       </div>
     </div>
@@ -632,70 +818,100 @@ function getInvoiceNotificationHtml_(year, month, companySummary, grandTotal, li
 function getInvoiceApprovedHtml_(company, year, month, total, items) {
   const tableRows = items.map(item => {
     return `<tr>
-      <td style="padding:8px 10px; border-bottom:1px solid #eee; font-size:13px; color:#444;">${escapeHtml_(item.date)}</td>
-      <td style="padding:8px 10px; border-bottom:1px solid #eee; font-size:13px; color:#444;">${escapeHtml_(item.site)}</td>
-      <td style="padding:8px 10px; border-bottom:1px solid #eee; font-size:13px; color:#444; text-align:right;">${item.workers}</td>
-      <td style="padding:8px 10px; border-bottom:1px solid #eee; font-size:13px; color:#444; text-align:right;">&yen;${Number(item.rate).toLocaleString()}</td>
-      <td style="padding:8px 10px; border-bottom:1px solid #eee; font-size:13px; color:#444; text-align:right;">&yen;${Number(item.highway).toLocaleString()}</td>
-      <td style="padding:8px 10px; border-bottom:1px solid #eee; font-size:13px; color:#444; text-align:right; font-weight:600;">&yen;${Number(item.subtotal).toLocaleString()}</td>
+      <td style="padding:12px 10px; border-bottom:1px solid #f0f0f0; font-size:13px; color:#333;">${escapeHtml_(item.date)}</td>
+      <td style="padding:12px 10px; border-bottom:1px solid #f0f0f0; font-size:13px; color:#333; font-weight:700;">${escapeHtml_(item.site)}</td>
+      <td style="padding:12px 10px; border-bottom:1px solid #f0f0f0; font-size:13px; color:#333; text-align:right;">${item.workers}</td>
+      <td style="padding:12px 10px; border-bottom:1px solid #f0f0f0; font-size:13px; color:#333; text-align:right;">&yen;${Number(item.rate).toLocaleString()}</td>
+      <td style="padding:12px 10px; border-bottom:1px solid #f0f0f0; font-size:13px; color:#333; text-align:right; font-weight:700;">&yen;${Number(item.subtotal).toLocaleString()}</td>
     </tr>`;
   }).join('');
 
   return `
-  <div style="font-family:'Helvetica Neue', Arial, 'Noto Sans JP', sans-serif; background-color:#f5f0ea; padding:40px 20px; color:#111;">
-    <div style="max-width:600px; margin:0 auto; background-color:#fff; border-radius:12px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.05); border:1px solid #e0dbd4;">
-      <div style="background-color:#222; padding:30px; text-align:center;">
-        <span style="color:#fff; font-size:24px; font-weight:800; letter-spacing:0.1em;"><em style="font-style:normal; color:#e07830;">O</em>ffice DAIKOU</span>
+  <div style="font-family:'Helvetica Neue', Arial, 'Noto Sans JP', sans-serif; background-color:#f8f7f5; padding:50px 20px; color:#111;">
+    <div style="max-width:640px; margin:0 auto; background-color:#fff; border-radius:16px; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.06);">
+      <div style="background-color:#111; padding:40px; text-align:center;">
+        <span style="color:#fff; font-size:32px; font-weight:900; letter-spacing:-0.02em;">di<span style="color:#3b82f6;">let</span>to</span>
       </div>
-      <div style="padding:40px 30px;">
-        <div style="text-align:center; margin-bottom:24px;">
-          <div style="width:56px; height:56px; border-radius:50%; background:#e8f5ee; border:2px solid #b0d4be; display:inline-flex; align-items:center; justify-content:center;">
-            <span style="font-size:28px;">&#10003;</span>
+      <div style="padding:50px 40px;">
+        <h2 style="font-size:22px; font-weight:900; color:#111; margin-bottom:8px;">${escapeHtml_(company)} 様</h2>
+        <p style="font-size:15px; color:#888; margin-bottom:32px;">${year}年${month}月分 請求明細</p>
+
+        <p style="font-size:16px; line-height:1.7; color:#333; margin-bottom:32px;">
+          いつも大変お世話になっております。<br>
+          本日、請求書の承認が完了いたしました。
+        </p>
+
+        <div style="margin-bottom:40px; border:1px solid #eee; border-radius:12px; overflow:hidden;">
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="background:#f8f7f5; color:#111; padding:12px 10px; font-size:11px; font-weight:900; text-align:left; border-bottom:1px solid #eee;">日付</th>
+                <th style="background:#f8f7f5; color:#111; padding:12px 10px; font-size:11px; font-weight:900; text-align:left; border-bottom:1px solid #eee;">現場名</th>
+                <th style="background:#f8f7f5; color:#111; padding:12px 10px; font-size:11px; font-weight:900; text-align:right; border-bottom:1px solid #eee;">人数/数量</th>
+                <th style="background:#f8f7f5; color:#111; padding:12px 10px; font-size:11px; font-weight:900; text-align:right; border-bottom:1px solid #eee;">単価値</th>
+                <th style="background:#f8f7f5; color:#111; padding:12px 10px; font-size:11px; font-weight:900; text-align:right; border-bottom:1px solid #eee;">小計</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRows}
+            </tbody>
+          </table>
+          <div style="padding:24px; background:#fff; text-align:right; border-top:2px solid #111;">
+            <p style="font-size:12px; color:#aaa; margin:0 0 4px; font-weight:700;">Total Amount</p>
+            <p style="font-size:32px; font-weight:900; color:#111; margin:0;">&yen;${total.toLocaleString()}</p>
           </div>
         </div>
-        <h1 style="font-size:20px; font-weight:700; color:#111; margin-bottom:8px; text-align:center;">承認が完了しました</h1>
-        <p style="font-size:14px; color:#888; text-align:center; margin-bottom:24px;">${year}年${month}月分</p>
 
-        <div style="background:#f5f0ea; border-radius:8px; padding:20px; margin-bottom:24px;">
-          <p style="font-size:16px; font-weight:700; color:#222; margin:0 0 4px;">${escapeHtml_(company)} 御中</p>
-          <p style="font-size:14px; color:#888; margin:0;">${items.length}件の明細</p>
-        </div>
-
-        <table style="width:100%; border-collapse:collapse; margin-bottom:16px;">
-          <thead>
-            <tr>
-              <th style="background:#222; color:#fff; padding:8px 10px; font-size:11px; font-weight:500; text-align:left;">日付</th>
-              <th style="background:#222; color:#fff; padding:8px 10px; font-size:11px; font-weight:500; text-align:left;">現場名</th>
-              <th style="background:#222; color:#fff; padding:8px 10px; font-size:11px; font-weight:500; text-align:right;">人数</th>
-              <th style="background:#222; color:#fff; padding:8px 10px; font-size:11px; font-weight:500; text-align:right;">駐車場代</th>
-              <th style="background:#222; color:#fff; padding:8px 10px; font-size:11px; font-weight:500; text-align:right;">高速代</th>
-              <th style="background:#222; color:#fff; padding:8px 10px; font-size:11px; font-weight:500; text-align:right;">小計</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tableRows}
-          </tbody>
-        </table>
-
-        <div style="text-align:right; padding-top:12px; border-top:2px solid #222;">
-          <span style="font-size:12px; color:#888; margin-right:8px;">合計金額</span>
-          <span style="font-size:24px; font-weight:900; color:#222;">&yen;${total.toLocaleString()}</span>
-        </div>
-
-        <p style="font-size:16px; line-height:1.7; color:#444; margin:24px 0 32px;">
-          PDFファイルをこのメールに添付しております。<br>
-          ご確認をお願いいたします。
+        <p style="font-size:15px; line-height:1.7; color:#333; margin-bottom:48px; background:#f8f7f5; padding:20px; border-radius:8px;">
+          正式な請求書（PDF）を本メールに添付いたしました。<br>
+          お手数ですが、ご確認いただけますようお願い申し上げます。
         </p>
 
-        <hr style="border:none; border-top:1px solid #e0dbd4; margin-bottom:32px;">
-        <p style="font-size:14px; color:#888; line-height:1.6;">
-          ※このメールは送信専用です。
+        <p style="font-size:13px; color:#bbb; text-align:center;">
+          Office DAIKOU by 大晃工業合同会社 / diletto
         </p>
       </div>
-      <div style="background-color:#fafaf8; padding:30px; text-align:center; border-top:1px solid #e0dbd4;">
-        <p style="font-size:12px; color:#aaa; margin:0;">
-          &copy; 2026 diletto by AI Skill Exchange. All rights reserved.<br>
-          Office DAIKOU（大晃工業合同会社）
+    </div>
+  </div>`;
+}
+
+function getMagicLinkHtml_(type, token, expires) {
+  const userType = type === 'diletto' ? 'diletto' : '大晃工業';
+  const loginUrl = `https://2han2be4han.github.io/office-daikou/admin-login.html?token=${token}`;
+  
+  return `
+  <div style="font-family:'Helvetica Neue', Arial, 'Noto Sans JP', sans-serif; background-color:#f8f7f5; padding:50px 20px; color:#111;">
+    <div style="max-width:500px; margin:0 auto; background-color:#fff; border-radius:16px; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.06);">
+      <div style="background-color:#111; padding:40px; text-align:center;">
+        <span style="color:#fff; font-size:32px; font-weight:900; letter-spacing:-0.02em;">di<span style="color:#3b82f6;">let</span>to</span>
+      </div>
+      <div style="padding:50px 40px;">
+        <h2 style="font-size:22px; font-weight:900; color:#111; margin-bottom:8px;">認証コード</h2>
+        <p style="font-size:15px; color:#888; margin-bottom:32px;">管理画面ログイン (${userType})</p>
+
+        <p style="font-size:16px; line-height:1.7; color:#333; margin-bottom:32px;">
+          お疲れ様です。<br>
+          以下のボタンをクリックしてログインを完了してください。
+        </p>
+
+        <div style="text-align:center; margin-bottom:32px;">
+          <a href="${loginUrl}" style="display:inline-block; background-color:#111; color:#fff; padding:18px 32px; border-radius:10px; font-size:16px; font-weight:800; text-decoration:none; box-shadow:0 10px 20px rgba(0,0,0,0.15);">
+            管理画面にログインする
+          </a>
+        </div>
+
+        <div style="background:#f8f7f5; border-radius:12px; padding:24px; text-align:center; margin-bottom:32px;">
+          <p style="font-size:12px; color:#aaa; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; margin:0 0 12px;">Token (手動入力用)</p>
+          <p style="font-size:13px; font-family:monospace; font-weight:700; color:#111; margin:0; word-break:break-all;">${token}</p>
+        </div>
+
+        <p style="font-size:14px; color:#999; text-align:center; margin-bottom:48px;">
+          有効期限: ${expires.toLocaleString()}<br>
+          <span style="font-size:12px;">※発行から5分間のみ有効です</span>
+        </p>
+
+        <p style="font-size:13px; color:#bbb; text-align:center;">
+          Office DAIKOU by 大晃工業合同会社 / diletto
         </p>
       </div>
     </div>
