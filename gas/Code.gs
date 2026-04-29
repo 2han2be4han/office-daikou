@@ -85,6 +85,13 @@ function doGet(e) {
       return handleGetEmployees(e);
     case 'getclientemail':
       return handleGetClientEmail(e);
+    // ===== 請求書発行 (billing) =====
+    case 'billingcompanies':
+      return handleBillingCompanies(e);
+    case 'billingdrafts':
+      return handleBillingDrafts(e);
+    case 'billingdraftload':
+      return handleBillingDraftLoad(e);
     default:
       return jsonResponse({ success: false, message: '不明なアクションです' });
   }
@@ -100,6 +107,10 @@ function doPost(e) {
     const data = JSON.parse(e.postData.contents);
     return handleSaveClientEmail(data.company, data.email);
   }
+  // ===== 請求書発行 (billing) =====
+  if (action === 'billingsavedraft') return handleBillingSaveDraft(e);
+  if (action === 'billingdeletedraft') return handleBillingDeleteDraft(e);
+  if (action === 'billingissue') return handleBillingIssue(e);
 
   // デフォルト：フォームデータ受信
   return handleReceiveFormData(e);
@@ -936,4 +947,511 @@ function setupMonthlyTrigger() {
     .onMonthDay(1)
     .atHour(0)
     .create();
+}
+
+// ============================================================
+// ===== 請求書発行 (billing) 機能 ==============================
+// ============================================================
+
+const SHEET_NAME_BILLING_LOG = '請求書ログ';
+const SHEET_NAME_BILLING_DRAFT = '請求書下書き';
+
+const BILLING_DETAIL_START_ROW = 11;
+const BILLING_DETAIL_TEMPLATE_ROWS = 15;
+const BILLING_TAX_RATE = 0.10;
+
+// 自社請負: 摘要=A(1), 数量=F(6), 単価=G(7), 明細金額=I(9)
+const BILLING_JISHA_COLS = { description: 1, qty: 6, unitPrice: 7, amount: 9 };
+// 応援:    取引日=A(1), 摘要=B(2), 数量=G(7), 単価=H(8), 明細金額=J(10)
+const BILLING_OUEN_COLS  = { tradeDate: 1, description: 2, qty: 7, unitPrice: 8, amount: 10 };
+
+// ===== 全権限の承認（初回・スコープ追加時にGASエディタから手動実行） =====
+function authorizeBilling() {
+  try { DriveApp.getRootFolder().getName(); } catch (e) { Logger.log('Drive: ' + e.message); }
+  try { SpreadsheetApp.getActiveSpreadsheet(); } catch (e) {}
+  try { MailApp.getRemainingDailyQuota(); } catch (e) { Logger.log('Mail: ' + e.message); }
+  try { ScriptApp.getOAuthToken(); } catch (e) { Logger.log('ScriptApp: ' + e.message); }
+  try {
+    UrlFetchApp.fetch('https://www.google.com', { muteHttpExceptions: true });
+  } catch (e) { Logger.log('UrlFetch: ' + e.message); }
+  return '✅ 全API承認OK（権限がそろいました）';
+}
+
+// ===== 初期セットアップ（GASエディタから1回手動実行） =====
+function setupBilling() {
+  const props = getProps();
+
+  const defaults = {
+    BILLING_TEMPLATE_JISHA: '1qtRzmA5KRezZYfhUnNrKaRsyGllKMo05f5Asc3PgjQw',
+    BILLING_TEMPLATE_OUEN:  '1wW4Zyf7THHFEJiZgFbTFotmbBqXsIOqQwlbaZwxEYA8',
+    BILLING_PARENT_FOLDER_ID: '1n2bjf5InO2AQJfM85inOmQOteAVt_did',
+  };
+  Object.keys(defaults).forEach(k => {
+    if (!props.getProperty(k)) props.setProperty(k, defaults[k]);
+  });
+
+  if (!props.getProperty('BILLING_PDF_FOLDER_ID')) {
+    const parent = DriveApp.getFolderById(props.getProperty('BILLING_PARENT_FOLDER_ID'));
+    let pdfFolder;
+    const existing = parent.getFoldersByName('請求書PDF');
+    pdfFolder = existing.hasNext() ? existing.next() : parent.createFolder('請求書PDF');
+    props.setProperty('BILLING_PDF_FOLDER_ID', pdfFolder.getId());
+  }
+
+  ['BILLING_TEMPLATE_JISHA', 'BILLING_TEMPLATE_OUEN'].forEach(key => {
+    const id = props.getProperty(key);
+    if (!id) return;
+    try {
+      const ss = SpreadsheetApp.openById(id);
+      const sheet = ss.getSheets()[0];
+      sheet.createTextFinder('{{campany_name}}').replaceAllWith('{{company_name}}');
+    } catch (err) {
+      Logger.log('テンプレ修正スキップ: ' + key + ' - ' + err.message);
+    }
+  });
+
+  const ss = getSpreadsheet();
+  getBillingDraftSheet_(ss);
+  getBillingLogSheet_(ss);
+
+  const msg = '✅ setupBilling 完了\n' +
+    '・PDF保存フォルダID: ' + props.getProperty('BILLING_PDF_FOLDER_ID') + '\n' +
+    '・テンプレSS（自社）: ' + props.getProperty('BILLING_TEMPLATE_JISHA') + '\n' +
+    '・テンプレSS（応援）: ' + props.getProperty('BILLING_TEMPLATE_OUEN') + '\n' +
+    '・データSS下書き/ログシートを準備しました\n\n' +
+    '【次のステップ】\n' +
+    '1) Webアプリを再デプロイ\n' +
+    '2) テンプレSSで「内訳/10%対象(税抜)」の数値セルを {{taxable_amount}} に書き換え\n' +
+    '3) ロゴ・ハンコ画像をテンプレSSに貼り付け\n' +
+    '4) billing.html にアクセスして動作確認';
+  Logger.log(msg);
+  return msg;
+}
+
+function getBillingDraftSheet_(ss) {
+  let sheet = ss.getSheetByName(SHEET_NAME_BILLING_DRAFT);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME_BILLING_DRAFT);
+    sheet.appendRow([
+      '下書きID', '更新日時', 'モード', '請求日', '請求年月',
+      '会社名', '小計', '消費税', '請求金額', '備考', '明細JSON'
+    ]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function getBillingLogSheet_(ss) {
+  let sheet = ss.getSheetByName(SHEET_NAME_BILLING_LOG);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME_BILLING_LOG);
+    sheet.appendRow([
+      '発行日時', '請求書番号', 'モード', '請求日', '請求年月',
+      '会社名', '小計', '10%対象', '消費税対象外', '消費税', '請求金額',
+      'PDF URL', '明細件数'
+    ]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+// ===== APIエンドポイント =====
+
+function handleBillingCompanies(e) {
+  try {
+    const ss = getSpreadsheet();
+    const sheet = ss.getSheetByName(SHEET_NAME_CLIENT_SETTINGS);
+    if (!sheet) return jsonResponse({ success: true, companies: [] });
+    const data = sheet.getDataRange().getValues();
+    const companies = [];
+    for (let i = 1; i < data.length; i++) {
+      const name = String(data[i][0] || '').trim();
+      if (name) companies.push(name);
+    }
+    return jsonResponse({ success: true, companies: companies });
+  } catch (err) {
+    return jsonResponse({ success: false, message: err.message });
+  }
+}
+
+function handleBillingDrafts(e) {
+  try {
+    const ss = getSpreadsheet();
+    const sheet = getBillingDraftSheet_(ss);
+    const data = sheet.getDataRange().getValues();
+    const drafts = [];
+    for (let i = 1; i < data.length; i++) {
+      const r = data[i];
+      if (!r[0]) continue;
+      drafts.push({
+        draftId: r[0],
+        updatedAt: formatDateTimeJP_(r[1]),
+        mode: r[2],
+        date: formatDateJP_(r[3]),
+        yearMonth: r[4],
+        company: r[5],
+        subtotal: Number(r[6]) || 0,
+        tax: Number(r[7]) || 0,
+        total: Number(r[8]) || 0,
+      });
+    }
+    drafts.sort((a, b) => (a.updatedAt > b.updatedAt) ? -1 : 1);
+    return jsonResponse({ success: true, drafts: drafts });
+  } catch (err) {
+    return jsonResponse({ success: false, message: err.message });
+  }
+}
+
+function handleBillingDraftLoad(e) {
+  try {
+    const id = e.parameter.id;
+    const ss = getSpreadsheet();
+    const sheet = getBillingDraftSheet_(ss);
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === id) {
+        const r = data[i];
+        let details = [];
+        try { details = JSON.parse(r[10] || '[]'); } catch (e) {}
+        return jsonResponse({
+          success: true,
+          draft: {
+            draftId: r[0],
+            mode: r[2],
+            date: formatDateJP_(r[3]),
+            yearMonth: r[4],
+            company: r[5],
+            remarks: r[9] || '',
+            details: details,
+          }
+        });
+      }
+    }
+    return jsonResponse({ success: false, message: '下書きが見つかりません' });
+  } catch (err) {
+    return jsonResponse({ success: false, message: err.message });
+  }
+}
+
+function handleBillingSaveDraft(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const ss = getSpreadsheet();
+    const sheet = getBillingDraftSheet_(ss);
+    const now = new Date();
+
+    let draftId = data.draftId;
+    let rowIdx = -1;
+    if (draftId) {
+      const all = sheet.getDataRange().getValues();
+      for (let i = 1; i < all.length; i++) {
+        if (all[i][0] === draftId) { rowIdx = i + 1; break; }
+      }
+    }
+    if (!draftId) {
+      draftId = 'D' + Utilities.formatDate(now, 'JST', 'yyyyMMddHHmmss')
+              + '-' + Math.random().toString(36).slice(2, 6);
+    }
+
+    const row = [
+      draftId,
+      now,
+      data.mode || '',
+      data.date || '',
+      data.yearMonth || '',
+      data.company || '',
+      data.summary ? data.summary.subtotal : 0,
+      data.summary ? data.summary.tax : 0,
+      data.summary ? data.summary.total : 0,
+      data.remarks || '',
+      JSON.stringify(data.details || []),
+    ];
+
+    if (rowIdx > 0) {
+      sheet.getRange(rowIdx, 1, 1, row.length).setValues([row]);
+    } else {
+      sheet.appendRow(row);
+    }
+
+    return jsonResponse({ success: true, draftId: draftId });
+  } catch (err) {
+    return jsonResponse({ success: false, message: err.message });
+  }
+}
+
+function handleBillingDeleteDraft(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const id = data.draftId;
+    const ss = getSpreadsheet();
+    const sheet = getBillingDraftSheet_(ss);
+    const all = sheet.getDataRange().getValues();
+    for (let i = 1; i < all.length; i++) {
+      if (all[i][0] === id) {
+        sheet.deleteRow(i + 1);
+        return jsonResponse({ success: true });
+      }
+    }
+    return jsonResponse({ success: false, message: '見つかりません' });
+  } catch (err) {
+    return jsonResponse({ success: false, message: err.message });
+  }
+}
+
+function handleBillingIssue(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    if (data.mode === 'ouen') {
+      data.company = normalizeCompanyName_(data.company);
+    }
+    const result = issueInvoice_(data);
+    if (data.draftId) {
+      try {
+        const ss = getSpreadsheet();
+        const sheet = getBillingDraftSheet_(ss);
+        const all = sheet.getDataRange().getValues();
+        for (let i = 1; i < all.length; i++) {
+          if (all[i][0] === data.draftId) { sheet.deleteRow(i + 1); break; }
+        }
+      } catch (e) {}
+    }
+    return jsonResponse({
+      success: true,
+      invoiceNumber: result.invoiceNumber,
+      pdfUrl: result.pdfUrl,
+      total: result.total,
+      taxable: result.taxable,
+      tax: result.tax,
+    });
+  } catch (err) {
+    Logger.log(err);
+    return jsonResponse({ success: false, message: err.message || String(err) });
+  }
+}
+
+function issueInvoice_(payload) {
+  const props = getProps();
+  const mode = payload.mode === 'jisha' ? 'jisha' : 'ouen';
+  const templateId = mode === 'jisha'
+    ? props.getProperty('BILLING_TEMPLATE_JISHA')
+    : props.getProperty('BILLING_TEMPLATE_OUEN');
+  if (!templateId) throw new Error('テンプレートIDが未設定です。setupBilling を実行してください。');
+
+  const summary = payload.summary || calculateBillingSummary_(payload.details);
+  const invoiceNumber = generateInvoiceNumber_(payload.date);
+
+  const templateFile = DriveApp.getFileById(templateId);
+  const tempName = '__temp_' + invoiceNumber + '_' + Date.now();
+  const tempFile = templateFile.makeCopy(tempName);
+  let pdfUrl = null;
+
+  try {
+    const tempSS = SpreadsheetApp.openById(tempFile.getId());
+    const sheet = tempSS.getSheets()[0];
+
+    const replacements = {
+      '{{company_name}}':  String(payload.company || ''),
+      '{{campany_name}}':  String(payload.company || ''),
+      '{{date}}':          formatDateForInvoice_(payload.date),
+      '{{invoice_number}}': invoiceNumber,
+      '{{year_month}}':    String(payload.yearMonth || ''),
+      '{{small_invoice}}': formatNumberJP_(summary.subtotal),
+      '{{taxable_amount}}': formatNumberJP_(summary.taxable),
+      '{{tax}}':           formatNumberJP_(summary.tax),
+      '{{total_invoice}}': formatNumberJP_(summary.total),
+      '{{remarks}}':       String(payload.remarks || ''),
+    };
+    Object.keys(replacements).forEach(tag => {
+      sheet.createTextFinder(tag).matchEntireCell(false).replaceAllWith(replacements[tag]);
+    });
+
+    fillBillingDetailRows_(sheet, mode, payload.details || []);
+
+    SpreadsheetApp.flush();
+
+    const pdfBlob = exportSheetAsPdf_(tempSS.getId(), sheet.getSheetId());
+    const pdfName = invoiceNumber
+                  + '_' + sanitizeFileName_(payload.company)
+                  + '_' + sanitizeFileName_(payload.yearMonth || '')
+                  + '.pdf';
+    pdfBlob.setName(pdfName);
+
+    const folderId = props.getProperty('BILLING_PDF_FOLDER_ID');
+    if (folderId) {
+      const folder = DriveApp.getFolderById(folderId);
+      const pdfFile = folder.createFile(pdfBlob);
+      pdfUrl = pdfFile.getUrl();
+    }
+
+    const emailTo = props.getProperty('PARENT_COMPANY_EMAIL');
+    if (emailTo) {
+      MailApp.sendEmail({
+        to: emailTo,
+        subject: '【Office DAIKOU】請求書発行 ' + payload.company + ' ' + payload.yearMonth + '分 (' + invoiceNumber + ')',
+        body: '請求書を発行しました。\n\n'
+            + '宛先: ' + payload.company + ' 御中\n'
+            + '請求年月: ' + payload.yearMonth + '\n'
+            + '請求書番号: ' + invoiceNumber + '\n'
+            + '請求金額: ¥' + Number(summary.total).toLocaleString() + '\n'
+            + (pdfUrl ? '\nPDF: ' + pdfUrl + '\n' : '')
+            + '\n（このメールにも同じPDFを添付しています）',
+        attachments: [pdfBlob],
+      });
+    }
+
+    const ss = getSpreadsheet();
+    const logSheet = getBillingLogSheet_(ss);
+    logSheet.appendRow([
+      new Date(), invoiceNumber, mode === 'jisha' ? '自社請負' : '応援',
+      payload.date || '', payload.yearMonth || '', payload.company || '',
+      summary.subtotal, summary.taxable, summary.exempt, summary.tax, summary.total,
+      pdfUrl || '', (payload.details || []).length,
+    ]);
+
+    return {
+      invoiceNumber: invoiceNumber,
+      pdfUrl: pdfUrl,
+      total: summary.total,
+      taxable: summary.taxable,
+      tax: summary.tax,
+    };
+  } finally {
+    try { tempFile.setTrashed(true); } catch (err) {}
+  }
+}
+
+function fillBillingDetailRows_(sheet, mode, details) {
+  const N = details.length;
+  const startRow = BILLING_DETAIL_START_ROW;
+  const maxRows = BILLING_DETAIL_TEMPLATE_ROWS;
+  const cols = mode === 'jisha' ? BILLING_JISHA_COLS : BILLING_OUEN_COLS;
+  const lastCol = Math.max(10, cols.amount);
+
+  if (N > maxRows) {
+    const extra = N - maxRows;
+    const lastTplRow = startRow + maxRows - 1;
+    sheet.insertRowsAfter(lastTplRow, extra);
+    const sourceRange = sheet.getRange(lastTplRow, 1, 1, lastCol);
+    const targetRange = sheet.getRange(lastTplRow + 1, 1, extra, lastCol);
+    sourceRange.copyTo(targetRange, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
+  }
+
+  const totalRows = Math.max(N, maxRows);
+  for (let i = 0; i < totalRows; i++) {
+    const row = startRow + i;
+    const item = i < N ? details[i] : null;
+
+    if (mode === 'jisha') {
+      sheet.getRange(row, cols.description).setValue(item ? (item.description || '') : '');
+      sheet.getRange(row, cols.qty).setValue(item && item.qty ? item.qty : '');
+      sheet.getRange(row, cols.unitPrice).setValue(item && item.unitPrice ? item.unitPrice : '');
+      sheet.getRange(row, cols.amount).setValue(item && item.amount ? item.amount : '');
+    } else {
+      sheet.getRange(row, cols.tradeDate).setValue(item && item.tradeDate ? formatDateForInvoice_(item.tradeDate) : '');
+      sheet.getRange(row, cols.description).setValue(item ? (item.description || '') : '');
+      sheet.getRange(row, cols.qty).setValue(item && item.qty ? item.qty : '');
+      sheet.getRange(row, cols.unitPrice).setValue(item && item.unitPrice ? item.unitPrice : '');
+      sheet.getRange(row, cols.amount).setValue(item && item.amount ? item.amount : '');
+    }
+  }
+}
+
+function exportSheetAsPdf_(spreadsheetId, sheetId) {
+  const url = 'https://docs.google.com/spreadsheets/d/' + spreadsheetId + '/export?' + [
+    'exportFormat=pdf',
+    'format=pdf',
+    'gid=' + sheetId,
+    'size=A4',
+    'portrait=true',
+    'fitw=true',
+    'gridlines=false',
+    'printtitle=false',
+    'sheetnames=false',
+    'pagenumbers=false',
+    'fzr=false',
+    'top_margin=0.5',
+    'bottom_margin=0.5',
+    'left_margin=0.4',
+    'right_margin=0.4',
+  ].join('&');
+
+  const response = UrlFetchApp.fetch(url, {
+    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
+    muteHttpExceptions: true,
+  });
+  if (response.getResponseCode() !== 200) {
+    throw new Error('PDFエクスポート失敗: HTTP ' + response.getResponseCode()
+                    + ' - ' + response.getContentText().substring(0, 200));
+  }
+  return response.getBlob().setContentType('application/pdf');
+}
+
+function generateInvoiceNumber_(dateStr) {
+  const d = dateStr ? new Date(dateStr) : new Date();
+  const yyyymmdd = Utilities.formatDate(d, 'JST', 'yyyyMMdd');
+  const ss = getSpreadsheet();
+  const logSheet = getBillingLogSheet_(ss);
+  const data = logSheet.getDataRange().getValues();
+  const prefix = '010-' + yyyymmdd + '-';
+  let maxSeq = 0;
+  for (let i = 1; i < data.length; i++) {
+    const num = String(data[i][1] || '');
+    if (num.indexOf(prefix) === 0) {
+      const seq = parseInt(num.substring(prefix.length), 10);
+      if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+    }
+  }
+  return prefix + ('000' + (maxSeq + 1)).slice(-3);
+}
+
+function calculateBillingSummary_(details) {
+  let taxable = 0, exempt = 0;
+  (details || []).forEach(d => {
+    const amt = (parseFloat(d.qty) || 0) * (parseFloat(d.unitPrice) || 0);
+    if (d.type === 'exempt') exempt += amt;
+    else taxable += amt;
+  });
+  const tax = Math.floor(taxable * BILLING_TAX_RATE);
+  const subtotal = taxable + exempt;
+  return { taxable: taxable, exempt: exempt, subtotal: subtotal, tax: tax, total: subtotal + tax };
+}
+
+function formatNumberJP_(n) {
+  return Number(Math.round(n || 0)).toLocaleString('ja-JP');
+}
+
+function formatDateForInvoice_(dateStr) {
+  if (!dateStr) return '';
+  const d = (dateStr instanceof Date) ? dateStr : new Date(dateStr);
+  if (isNaN(d.getTime())) return String(dateStr);
+  return Utilities.formatDate(d, 'JST', 'yyyy-MM-dd');
+}
+
+function formatDateJP_(d) {
+  if (!d) return '';
+  if (d instanceof Date) return Utilities.formatDate(d, 'JST', 'yyyy-MM-dd');
+  return String(d);
+}
+
+function formatDateTimeJP_(d) {
+  if (!d) return '';
+  if (d instanceof Date) return Utilities.formatDate(d, 'JST', 'yyyy-MM-dd HH:mm');
+  return String(d);
+}
+
+function sanitizeFileName_(s) {
+  return String(s || '').replace(/[\\\/\*\?:"<>\|]/g, '_').replace(/\s+/g, '');
+}
+
+function normalizeCompanyName_(s) {
+  if (!s) return '';
+  let r = String(s);
+  r = r.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); });
+  r = r.replace(/[\s　]+/g, ' ').trim();
+  r = r.replace(/[\(（]株[\)）]/g, '株式会社');
+  r = r.replace(/[\(（]有[\)）]/g, '有限会社');
+  r = r.replace(/[\(（]合[\)）]/g, '合同会社');
+  r = r.replace(/\s+(株式会社|有限会社|合同会社)/g, '$1');
+  r = r.replace(/(株式会社|有限会社|合同会社)\s+/g, '$1');
+  return r;
 }

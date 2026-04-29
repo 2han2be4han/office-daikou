@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>請求書発行 - Office DAIKOU</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #f5f0ea;
+      --bg-white: #ffffff;
+      --bg-input: #fafaf8;
+      --text: #222222;
+      --text-sub: #888880;
+      --text-light: #b0aba3;
+      --accent: #e07830;
+      --accent-hover: #c86820;
+      --green: #3a8a5c;
+      --green-light: #e8f5ee;
+      --green-border: #b0d4be;
+      --black: #222222;
+      --border: #e0dbd4;
+      --border-light: #ece8e2;
+      --error: #d44;
+      --shadow-card: 0 2px 12px rgba(0,0,0,0.04);
+      --radius: 8px;
+      --radius-lg: 14px;
+      --font: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.7; font-size: 15px; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+    .header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(245, 240, 234, 0.92);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      padding: 0 20px; height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .header-logo { text-decoration: none; color: var(--text); font-size: 18px; font-weight: 900; letter-spacing: 1px; }
+    .header-logo .o { color: var(--accent); }
+    .header-actions { display: flex; gap: 8px; }
+    .icon-btn {
+      background: var(--bg-white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font);
+      color: var(--text);
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .icon-btn:hover { background: var(--bg-input); border-color: var(--accent); color: var(--accent); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Auth */
+    .auth-screen { display: none; min-height: calc(100vh - 56px); padding: 60px 20px; align-items: center; justify-content: center; }
+    .auth-screen.active { display: flex; }
+    .auth-card { background: var(--bg-white); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: 40px 28px; width: 100%; max-width: 400px; animation: fadeUp 0.4s ease-out; }
+    .auth-title { font-size: 22px; font-weight: 900; letter-spacing: 1px; margin-bottom: 2px; }
+    .auth-title .o { color: var(--accent); }
+    .auth-subtitle { font-size: 11px; color: var(--text-sub); margin-bottom: 6px; letter-spacing: 1px; }
+    .auth-desc { font-size: 13px; color: var(--text-sub); margin-bottom: 28px; }
+    .field-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block; }
+    .field-input {
+      width: 100%; padding: 12px 14px;
+      border: 1.5px solid var(--border); border-radius: var(--radius);
+      font-size: 16px; font-family: var(--font); color: var(--text);
+      background: var(--bg-input); outline: none; transition: 0.2s;
+      -webkit-appearance: none;
+    }
+    .field-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(224, 120, 48, 0.1); }
+    .field-input::placeholder { color: var(--text-light); }
+    .auth-error { color: var(--error); font-size: 13px; min-height: 22px; margin-top: 8px; }
+    .btn-black { width: 100%; padding: 14px; background: var(--black); color: #fff; border: none; border-radius: var(--radius); font-size: 15px; font-weight: 600; font-family: var(--font); cursor: pointer; transition: 0.2s; margin-top: 8px; }
+    .btn-black:hover { opacity: 0.85; }
+    .btn-black:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Main */
+    .main-content { display: none; }
+    .main-content.active { display: block; }
+
+    .mode-bar {
+      max-width: 720px; margin: 16px auto 0; padding: 0 20px;
+      display: flex; gap: 8px;
+    }
+    .mode-btn {
+      flex: 1; padding: 12px; background: var(--bg-white);
+      border: 1.5px solid var(--border); border-radius: var(--radius);
+      font-size: 14px; font-weight: 600; font-family: var(--font);
+      color: var(--text-sub); cursor: pointer; transition: 0.2s;
+    }
+    .mode-btn.active { border-color: var(--accent); background: rgba(224, 120, 48, 0.08); color: var(--accent); }
+
+    .form-container { max-width: 720px; margin: 0 auto; padding: 16px 20px 40px; }
+    .form-card { background: var(--bg-white); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: 24px 20px; margin-bottom: 16px; }
+    .form-section { margin-bottom: 18px; }
+    .form-section:last-child { margin-bottom: 0; }
+    .form-section-label {
+      font-size: 11px; font-weight: 600; color: var(--text-sub);
+      letter-spacing: 2px; text-transform: uppercase;
+      margin-bottom: 12px; padding-bottom: 6px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .form-group { margin-bottom: 14px; }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    .tag-required { font-size: 10px; font-weight: 600; color: var(--accent); border: 1.5px solid var(--accent); padding: 0 5px; border-radius: 3px; line-height: 1.6; }
+    .field-hint { font-size: 11px; color: var(--text-sub); margin-top: 4px; }
+
+    /* Company input with autocomplete */
+    .autocomplete-wrap { position: relative; }
+    .autocomplete-wrap .field-input { padding-right: 38px; }
+    .autocomplete-toggle {
+      position: absolute; right: 8px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--text-sub); padding: 6px;
+      font-size: 12px; line-height: 1;
+      border-radius: 4px;
+    }
+    .autocomplete-toggle:hover { background: var(--bg-input); color: var(--accent); }
+    .autocomplete-list {
+      position: absolute; top: calc(100% + 2px); left: 0; right: 0;
+      background: var(--bg-white); border: 1.5px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow-card);
+      max-height: 260px; overflow-y: auto; z-index: 50; display: none;
+    }
+    .autocomplete-list.open { display: block; }
+    .autocomplete-item { padding: 10px 14px; font-size: 14px; cursor: pointer; transition: 0.15s; }
+    .autocomplete-item:hover, .autocomplete-item.highlighted { background: var(--bg-input); color: var(--accent); }
+    .normalize-warn { font-size: 11px; color: var(--accent); margin-top: 4px; }
+
+    /* Detail rows */
+    .detail-table { width: 100%; }
+    .detail-row {
+      display: grid; gap: 6px; align-items: end;
+      padding: 10px 0; border-bottom: 1px dashed var(--border-light);
+    }
+    .detail-row.taxable { grid-template-columns: 28% 1fr 14% 18% 18% 28px; }
+    .detail-row.taxable.no-date { grid-template-columns: 1fr 14% 18% 18% 28px; }
+    .detail-row.exempt { grid-template-columns: 28% 1fr 14% 18% 18% 28px; background: rgba(224, 120, 48, 0.04); padding-left: 6px; padding-right: 6px; border-radius: 4px; }
+    .detail-row.exempt.no-date { grid-template-columns: 1fr 14% 18% 18% 28px; }
+    .detail-row .col-head {
+      font-size: 10px; font-weight: 600; color: var(--text-sub);
+      letter-spacing: 1px; margin-bottom: 4px;
+    }
+    .detail-row input.field-input { padding: 8px 10px; font-size: 14px; }
+    .detail-row input.field-input.amount { background: #f3eee8; font-weight: 600; text-align: right; }
+    .detail-row input.field-input.num { text-align: right; }
+    .detail-row .row-del {
+      background: none; border: none; color: var(--text-light);
+      cursor: pointer; font-size: 18px; padding: 0; align-self: center;
+      margin-bottom: 8px;
+    }
+    .detail-row .row-del:hover { color: var(--error); }
+    .detail-row .col-cell { display: flex; flex-direction: column; }
+
+    .detail-row .exempt-tag {
+      font-size: 10px; color: var(--accent); margin-top: 2px;
+      font-weight: 600;
+    }
+
+    .detail-add-bar { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .add-btn {
+      padding: 9px 14px; background: var(--bg-input);
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius); font-size: 13px; font-weight: 600;
+      font-family: var(--font); color: var(--text); cursor: pointer; transition: 0.2s;
+    }
+    .add-btn:hover { background: rgba(224, 120, 48, 0.08); border-color: var(--accent); color: var(--accent); }
+
+    /* Summary */
+    .summary-grid {
+      display: grid; gap: 8px; padding: 16px 0;
+      font-size: 14px;
+    }
+    .summary-row { display: flex; justify-content: space-between; align-items: baseline; }
+    .summary-row.indent { padding-left: 16px; font-size: 13px; color: var(--text-sub); }
+    .summary-row.tax-line { padding-top: 8px; border-top: 1px solid var(--border-light); }
+    .summary-row.total {
+      font-size: 22px; font-weight: 900; padding-top: 12px;
+      border-top: 2px solid var(--black); margin-top: 4px;
+    }
+    .summary-row .num { font-variant-numeric: tabular-nums; }
+
+    /* Action buttons */
+    .action-bar {
+      display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;
+    }
+    .action-bar > button { flex: 1; min-width: 140px; }
+    .btn-secondary {
+      padding: 14px; background: var(--bg-white);
+      color: var(--text); border: 1.5px solid var(--border);
+      border-radius: var(--radius); font-size: 15px; font-weight: 600;
+      font-family: var(--font); cursor: pointer; transition: 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-secondary:hover { background: var(--bg-input); border-color: var(--text-sub); }
+    .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary {
+      padding: 14px; background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius); font-size: 15px; font-weight: 700;
+      font-family: var(--font); cursor: pointer; transition: 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Spinner */
+    .spinner-sm {
+      width: 16px; height: 16px;
+      border: 2.5px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block;
+    }
+    .spinner-dark {
+      width: 16px; height: 16px;
+      border: 2.5px solid rgba(0,0,0,0.15); border-top-color: var(--text);
+      border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 14px 24px; border-radius: 50px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      font-size: 14px; font-weight: 500; z-index: 400;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      max-width: calc(100vw - 40px);
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { background: var(--green); color: #fff; }
+    .toast.error { background: var(--error); color: #fff; }
+    .toast.info { background: var(--text); color: #fff; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      z-index: 300; display: none;
+      align-items: center; justify-content: center; padding: 24px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-card {
+      background: var(--bg-white); border-radius: var(--radius-lg);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.16);
+      width: 100%; max-width: 540px;
+      max-height: calc(100vh - 48px); display: flex; flex-direction: column;
+      animation: fadeUp 0.3s ease-out;
+    }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 20px 24px; border-bottom: 1px solid var(--border-light);
+    }
+    .modal-title { font-size: 17px; font-weight: 700; }
+    .modal-close {
+      background: none; border: none; font-size: 22px;
+      color: var(--text-sub); cursor: pointer; padding: 0; line-height: 1;
+    }
+    .modal-body { padding: 16px 24px; overflow-y: auto; }
+    .draft-empty { text-align: center; padding: 32px 0; color: var(--text-sub); font-size: 13px; }
+    .draft-item {
+      padding: 14px 16px; border: 1.5px solid var(--border-light);
+      border-radius: var(--radius); margin-bottom: 8px; cursor: pointer;
+      transition: 0.15s; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    }
+    .draft-item:hover { border-color: var(--accent); background: var(--bg-input); }
+    .draft-item-main { min-width: 0; flex: 1; }
+    .draft-item-title { font-size: 14px; font-weight: 700; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .draft-item-meta { font-size: 11px; color: var(--text-sub); }
+    .draft-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .draft-mini-btn {
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 4px; padding: 4px 8px; font-size: 11px;
+      font-family: var(--font); cursor: pointer; color: var(--text);
+    }
+    .draft-mini-btn:hover { background: var(--bg-white); border-color: var(--accent); color: var(--accent); }
+    .draft-mini-btn.danger:hover { border-color: var(--error); color: var(--error); }
+    .draft-tag {
+      display: inline-block; font-size: 10px; font-weight: 600;
+      padding: 1px 6px; border-radius: 3px; margin-right: 6px;
+    }
+    .draft-tag.jisha { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
+    .draft-tag.ouen { background: rgba(224, 120, 48, 0.1); color: var(--accent); border: 1px solid var(--accent); }
+
+    /* Result modal */
+    .result-icon {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--green-light); border: 2px solid var(--green-border);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .result-icon svg { color: var(--green); }
+    .result-list { padding: 0; list-style: none; margin: 16px 0; }
+    .result-list li {
+      display: flex; justify-content: space-between; padding: 6px 0;
+      border-bottom: 1px solid var(--border-light); font-size: 13px;
+    }
+    .result-list li span:first-child { color: var(--text-sub); }
+    .result-list li span:last-child { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    .footer { text-align: center; padding: 32px 20px; font-size: 11px; color: var(--text-light); }
+
+    @media (max-width: 640px) {
+      .form-card { padding: 18px 14px; }
+      .form-container { padding: 12px 14px 32px; }
+      .detail-row.taxable, .detail-row.exempt { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .detail-row.taxable.no-date, .detail-row.exempt.no-date { grid-template-columns: 1fr 1fr; }
+      .detail-row .row-del { grid-column: span 2; justify-self: end; margin-bottom: 0; }
+      .modal-card { max-height: 100vh; border-radius: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <a href="#" class="header-logo" onclick="event.preventDefault();"><span class="o">O</span>ffice DAIKOU - 請求書発行</a>
+    <div class="header-actions" id="headerActions" style="display:none;">
+      <button class="icon-btn" onclick="openDraftsModal()">📋 下書き</button>
+      <button class="icon-btn" onclick="resetForm(true)">＋ 新規</button>
+    </div>
+  </header>
+
+  <!-- Auth -->
+  <div class="auth-screen active" id="authScreen">
+    <div class="auth-card">
+      <h1 class="auth-title"><span class="o">O</span>ffice DAIKOU</h1>
+      <p class="auth-subtitle">by 大晃工業合同会社</p>
+      <p class="auth-desc">請求書発行フォーム</p>
+      <form onsubmit="handleAuth(event)">
+        <label class="field-label" for="authPassword">パスワード</label>
+        <input type="tel" id="authPassword" class="field-input" placeholder="数字4桁" inputmode="numeric" pattern="[0-9]*" maxlength="4" required>
+        <div class="auth-error" id="authError"></div>
+        <button type="submit" class="btn-black" id="authBtn">ログイン</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main-content" id="mainContent">
+
+    <div class="mode-bar">
+      <button class="mode-btn active" id="modeJisha" onclick="switchMode('jisha')">自社請負</button>
+      <button class="mode-btn" id="modeOuen" onclick="switchMode('ouen')">応援（人工代）</button>
+    </div>
+
+    <div class="form-container">
+
+      <div class="form-card">
+        <div class="form-section">
+          <div class="form-section-label">基本情報</div>
+
+          <div class="form-group">
+            <label class="form-label" for="fldDate">請求日 <span class="tag-required">必須</span></label>
+            <input type="date" id="fldDate" class="field-input" oninput="updateYearMonth()">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">請求年月</label>
+            <input type="text" id="fldYearMonth" class="field-input" readonly placeholder="請求日から自動">
+            <div class="field-hint">請求日の年月が自動で入ります（必要なら直接編集可）</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">請求書番号</label>
+            <input type="text" id="fldInvoiceNumber" class="field-input" readonly value="発行時に自動採番">
+            <div class="field-hint">「請求書を発行」した時に確定します</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="fldCompany">宛先会社名 <span class="tag-required">必須</span></label>
+            <div class="autocomplete-wrap">
+              <input type="text" id="fldCompany" class="field-input" placeholder="会社名を入力（▼で候補表示）" autocomplete="off"
+                oninput="onCompanyInput()" onfocus="onCompanyFocus()" onblur="onCompanyBlur()">
+              <button type="button" class="autocomplete-toggle" id="companyToggleBtn" onmousedown="event.preventDefault(); toggleCompanyList();" title="候補一覧">▼</button>
+              <div class="autocomplete-list" id="companyList"></div>
+            </div>
+            <div class="normalize-warn" id="normalizeWarn" style="display:none;"></div>
+            <div class="field-hint" id="companyHint"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-section">
+          <div class="form-section-label">明細</div>
+          <div class="detail-table" id="detailTable"></div>
+          <div class="detail-add-bar">
+            <button type="button" class="add-btn" onclick="addRow('taxable')">＋ 通常行（現場名など）</button>
+            <button type="button" class="add-btn" onclick="addRow('exempt', 'highway')">＋ 高速代</button>
+            <button type="button" class="add-btn" onclick="addRow('exempt', 'parking')">＋ 駐車場代</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-section">
+          <div class="form-section-label">集計</div>
+          <div class="summary-grid">
+            <div class="summary-row"><span>小計（税抜）</span><span class="num" id="sumSubtotal">¥0</span></div>
+            <div class="summary-row indent"><span>├ 10%対象（税抜）</span><span class="num" id="sumTaxable">¥0</span></div>
+            <div class="summary-row indent"><span>└ 消費税対象外（高速代）</span><span class="num" id="sumExempt">¥0</span></div>
+            <div class="summary-row tax-line"><span>消費税（10%）</span><span class="num" id="sumTax">¥0</span></div>
+            <div class="summary-row total"><span>請求金額</span><span class="num" id="sumTotal">¥0</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-section">
+          <div class="form-section-label">備考</div>
+          <textarea id="fldRemarks" class="field-input" rows="3" style="resize:vertical;"></textarea>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <button class="btn-secondary" id="saveBtn" onclick="handleSaveDraft()">
+          <span id="saveBtnIcon">💾</span><span id="saveBtnLabel">一時保存</span>
+        </button>
+        <button class="btn-primary" id="issueBtn" onclick="handleIssue()">
+          <span id="issueBtnIcon">📄</span><span id="issueBtnLabel">請求書を発行</span>
+        </button>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <p>&copy; 2026 diletto by AI Skill Exchange. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <!-- Drafts Modal -->
+  <div class="modal-overlay" id="draftsModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title">下書き一覧</h2>
+        <button class="modal-close" onclick="closeDraftsModal()">×</button>
+      </div>
+      <div class="modal-body" id="draftsBody">
+        <div class="draft-empty">読み込み中...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result Modal -->
+  <div class="modal-overlay" id="resultModal">
+    <div class="modal-card" style="max-width:420px;">
+      <div class="modal-body" style="padding:32px 24px; text-align:center;">
+        <div class="result-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <h3 style="font-size:18px; font-weight:700; margin-bottom:4px;" id="resultTitle">請求書を発行しました</h3>
+        <p style="font-size:13px; color:var(--text-sub);" id="resultSubtitle">PDFがメールで送信されました</p>
+        <ul class="result-list" id="resultList"></ul>
+        <button class="btn-black" onclick="closeResultModal()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><span id="toastText"></span></div>
+
+  <script>
+    // ===== Configuration =====
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwd-gmuQFm_CB82vMRA-g6KUJ_oQIkxzksjmYygtU1x2rUtXxeuAeXOgP78OCMY1s_JEQ/exec';
+    const STORAGE_KEY = 'billing_form_v1';
+    const TAX_RATE = 0.10;
+    const MAX_TEMPLATE_ROWS = 15;
+
+    // ===== State =====
+    let state = {
+      mode: 'jisha',         // 'jisha' | 'ouen'
+      draftId: null,
+      details: [],           // [{type:'taxable'|'exempt', tradeDate?, description, qty, unitPrice}]
+      companies: [],         // master list
+    };
+
+    // ===== Auth =====
+    function handleAuth(e) {
+      e.preventDefault();
+      const password = document.getElementById('authPassword').value;
+      const errorEl = document.getElementById('authError');
+      const btn = document.getElementById('authBtn');
+      if (!GAS_URL) {
+        if (password === '0501') {
+          sessionStorage.setItem('billing_auth', 'true');
+          errorEl.textContent = ''; showMain();
+        } else { errorEl.textContent = 'パスワードが違います'; }
+        return;
+      }
+      btn.disabled = true; btn.innerHTML = '<div class="spinner-sm"></div>';
+      fetch(GAS_URL + '?action=auth&formType=self&password=' + encodeURIComponent(password))
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) { sessionStorage.setItem('billing_auth', 'true'); errorEl.textContent = ''; showMain(); }
+          else { errorEl.textContent = 'パスワードが違います'; }
+        })
+        .catch(() => { errorEl.textContent = '通信エラーが発生しました'; })
+        .finally(() => { btn.disabled = false; btn.textContent = 'ログイン'; });
+    }
+
+    function showMain() {
+      document.getElementById('authScreen').classList.remove('active');
+      document.getElementById('mainContent').classList.add('active');
+      document.getElementById('headerActions').style.display = 'flex';
+      initForm();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (sessionStorage.getItem('billing_auth') === 'true') showMain();
+    });
+
+    // ===== Form init =====
+    function initForm() {
+      restoreFromStorage();
+      const today = new Date();
+      if (!document.getElementById('fldDate').value) {
+        document.getElementById('fldDate').value = formatDateInput(today);
+        updateYearMonth();
+      }
+      if (state.details.length === 0) {
+        addRow('taxable');
+        addRow('exempt');
+      } else {
+        renderDetails();
+      }
+      loadCompanies();
+      setDefaultRemarks();
+      updateModeUI();
+    }
+
+    function setDefaultRemarks() {
+      const el = document.getElementById('fldRemarks');
+      if (!el.value) el.value = '今回より、弊社の振込み先口座を変更しております。\nお手数をおかけして申し訳ありませんが、よろしくお願いします。';
+    }
+
+    function formatDateInput(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const da = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${da}`;
+    }
+
+    function updateYearMonth() {
+      const v = document.getElementById('fldDate').value;
+      if (!v) return;
+      const d = new Date(v);
+      if (isNaN(d.getTime())) return;
+      document.getElementById('fldYearMonth').value = `${d.getFullYear()}年${d.getMonth() + 1}月`;
+      saveToStorage();
+    }
+
+    // ===== Mode switching =====
+    function switchMode(mode) {
+      if (state.mode === mode) return;
+      state.mode = mode;
+      updateModeUI();
+      renderDetails();
+      saveToStorage();
+    }
+
+    function updateModeUI() {
+      document.getElementById('modeJisha').classList.toggle('active', state.mode === 'jisha');
+      document.getElementById('modeOuen').classList.toggle('active', state.mode === 'ouen');
+      document.getElementById('companyHint').textContent = state.mode === 'jisha'
+        ? '取引先設定の候補から選択するか、新しい会社名を入力してください'
+        : '応援先は手入力。表記ゆれを自動整形します（送信時に確認可）';
+    }
+
+    // ===== Detail rows =====
+    function addRow(type, subtype) {
+      let description = '';
+      let qty = '';
+      if (type === 'exempt') {
+        if (subtype === 'parking') description = '駐車場代（税込：消費税集計対象外）';
+        else description = '高速代（税込：消費税集計対象外）';
+        qty = '1';
+      }
+      state.details.push({
+        type,
+        subtype: subtype || (type === 'exempt' ? 'highway' : null),
+        tradeDate: '',
+        description,
+        qty,
+        unitPrice: '',
+      });
+      renderDetails();
+      saveToStorage();
+    }
+
+    function removeRow(idx) {
+      state.details.splice(idx, 1);
+      renderDetails();
+      saveToStorage();
+    }
+
+    function renderDetails() {
+      const tbl = document.getElementById('detailTable');
+      tbl.innerHTML = '';
+      const showDate = state.mode === 'ouen';
+
+      state.details.forEach((row, idx) => {
+        const div = document.createElement('div');
+        div.className = 'detail-row ' + row.type + (showDate ? '' : ' no-date');
+
+        const amount = (parseFloat(row.qty) || 0) * (parseFloat(row.unitPrice) || 0);
+
+        const cells = [];
+        if (showDate) {
+          cells.push(`
+            <div class="col-cell">
+              ${idx === 0 ? '<div class="col-head">取引日</div>' : ''}
+              <input type="date" class="field-input" value="${escapeAttr(row.tradeDate)}"
+                onchange="updateRow(${idx}, 'tradeDate', this.value)">
+            </div>
+          `);
+        }
+        cells.push(`
+          <div class="col-cell">
+            ${idx === 0 ? '<div class="col-head">摘要</div>' : ''}
+            <input type="text" class="field-input" value="${escapeAttr(row.description)}"
+              placeholder="${row.type === 'exempt' ? '高速代（税込：消費税集計対象外）' : '現場名'}"
+              ${row.type === 'exempt' ? '' : ''}
+              oninput="updateRow(${idx}, 'description', this.value)">
+            ${row.type === 'exempt' ? '<span class="exempt-tag">※消費税集計対象外</span>' : ''}
+          </div>
+        `);
+        cells.push(`
+          <div class="col-cell">
+            ${idx === 0 ? '<div class="col-head">数量</div>' : ''}
+            <input type="number" inputmode="numeric" min="0" step="1" class="field-input num" value="${escapeAttr(row.qty)}"
+              oninput="updateRow(${idx}, 'qty', this.value)">
+          </div>
+        `);
+        cells.push(`
+          <div class="col-cell">
+            ${idx === 0 ? '<div class="col-head">単価</div>' : ''}
+            <input type="number" inputmode="numeric" min="0" step="1" class="field-input num" value="${escapeAttr(row.unitPrice)}"
+              oninput="updateRow(${idx}, 'unitPrice', this.value)">
+          </div>
+        `);
+        cells.push(`
+          <div class="col-cell">
+            ${idx === 0 ? '<div class="col-head">明細金額</div>' : ''}
+            <input type="text" class="field-input amount" value="${formatNumber(amount)}" readonly tabindex="-1">
+          </div>
+        `);
+        cells.push(`<button type="button" class="row-del" onclick="removeRow(${idx})" title="削除">×</button>`);
+
+        div.innerHTML = cells.join('');
+        tbl.appendChild(div);
+      });
+      updateSummary();
+    }
+
+    function updateRow(idx, field, value) {
+      if (!state.details[idx]) return;
+      state.details[idx][field] = value;
+      // Update only the amount cell + summary, no full re-render (keeps focus)
+      const rowEl = document.querySelectorAll('#detailTable .detail-row')[idx];
+      if (rowEl) {
+        const amount = (parseFloat(state.details[idx].qty) || 0) * (parseFloat(state.details[idx].unitPrice) || 0);
+        const amountEl = rowEl.querySelector('.amount');
+        if (amountEl) amountEl.value = formatNumber(amount);
+      }
+      updateSummary();
+      saveToStorage();
+    }
+
+    // ===== Summary =====
+    function calculateSummary() {
+      let taxable = 0, exempt = 0;
+      state.details.forEach(r => {
+        const amt = (parseFloat(r.qty) || 0) * (parseFloat(r.unitPrice) || 0);
+        if (r.type === 'exempt') exempt += amt;
+        else taxable += amt;
+      });
+      const tax = Math.floor(taxable * TAX_RATE);
+      const subtotal = taxable + exempt;
+      const total = subtotal + tax;
+      return { taxable, exempt, subtotal, tax, total };
+    }
+
+    function updateSummary() {
+      const s = calculateSummary();
+      document.getElementById('sumSubtotal').textContent = '¥' + s.subtotal.toLocaleString();
+      document.getElementById('sumTaxable').textContent = '¥' + s.taxable.toLocaleString();
+      document.getElementById('sumExempt').textContent = '¥' + s.exempt.toLocaleString();
+      document.getElementById('sumTax').textContent = '¥' + s.tax.toLocaleString();
+      document.getElementById('sumTotal').textContent = '¥' + s.total.toLocaleString();
+    }
+
+    // ===== Companies (autocomplete + normalize) =====
+    function loadCompanies() {
+      if (!GAS_URL) {
+        state.companies = ['株式会社ヒダカ', '合同会社KM技建', '有限会社末次工務店'];
+        return;
+      }
+      fetch(GAS_URL + '?action=billingCompanies')
+        .then(r => r.json())
+        .then(d => { if (d.success) state.companies = d.companies || []; })
+        .catch(() => {});
+    }
+
+    function onCompanyInput() {
+      const inp = document.getElementById('fldCompany');
+      const list = document.getElementById('companyList');
+      if (state.mode === 'ouen') { list.classList.remove('open'); checkNormalization(); saveToStorage(); return; }
+      const q = inp.value.trim();
+      let filtered;
+      if (!q) {
+        filtered = state.companies; // 空ならマスタ全件
+      } else {
+        filtered = state.companies.filter(c => c.includes(q) || normalizeForMatch(c).includes(normalizeForMatch(q)));
+      }
+      if (filtered.length === 0) { list.classList.remove('open'); saveToStorage(); return; }
+      list.innerHTML = filtered.slice(0, 30).map(c => `<div class="autocomplete-item" onmousedown="selectCompany('${escapeAttr(c)}')">${escapeHtml(c)}</div>`).join('');
+      list.classList.add('open');
+      saveToStorage();
+    }
+
+    function onCompanyFocus() { if (state.mode === 'jisha') onCompanyInput(); }
+    function onCompanyBlur() { setTimeout(() => document.getElementById('companyList').classList.remove('open'), 150); }
+    function toggleCompanyList() {
+      const list = document.getElementById('companyList');
+      if (list.classList.contains('open')) {
+        list.classList.remove('open');
+      } else {
+        document.getElementById('fldCompany').focus();
+        onCompanyInput();
+      }
+    }
+
+    function selectCompany(name) {
+      document.getElementById('fldCompany').value = name;
+      document.getElementById('companyList').classList.remove('open');
+      checkNormalization();
+      saveToStorage();
+    }
+
+    function normalizeForMatch(s) {
+      return s.replace(/\s+/g, '').replace(/[\(（]株[\)）]/g, '株式会社').replace(/[\(（]有[\)）]/g, '有限会社').replace(/[\(（]合[\)）]/g, '合同会社');
+    }
+
+    function checkNormalization() {
+      const inp = document.getElementById('fldCompany');
+      const warn = document.getElementById('normalizeWarn');
+      if (state.mode !== 'ouen' || !inp.value.trim()) { warn.style.display = 'none'; return; }
+      const normalized = normalizeCompanyClient(inp.value);
+      if (normalized !== inp.value) {
+        warn.textContent = `→ 整形: "${normalized}" として登録されます`;
+        warn.style.display = 'block';
+      } else {
+        warn.style.display = 'none';
+      }
+    }
+
+    function normalizeCompanyClient(s) {
+      if (!s) return '';
+      let r = s;
+      r = r.replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+      r = r.replace(/\s+/g, ' ').trim();
+      r = r.replace(/[\(（]株[\)）]/g, '株式会社').replace(/[\(（]有[\)）]/g, '有限会社').replace(/[\(（]合[\)）]/g, '合同会社');
+      r = r.replace(/(株式会社|有限会社|合同会社)\s+/g, '$1').replace(/\s+(株式会社|有限会社|合同会社)/g, '$1');
+      return r;
+    }
+
+    // ===== Storage (localStorage backup for unsent state) =====
+    function saveToStorage() {
+      try {
+        const snapshot = {
+          mode: state.mode,
+          draftId: state.draftId,
+          date: document.getElementById('fldDate').value,
+          yearMonth: document.getElementById('fldYearMonth').value,
+          company: document.getElementById('fldCompany').value,
+          remarks: document.getElementById('fldRemarks').value,
+          details: state.details,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+      } catch (e) {}
+    }
+
+    function restoreFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const s = JSON.parse(raw);
+        state.mode = s.mode || 'jisha';
+        state.draftId = s.draftId || null;
+        state.details = s.details || [];
+        document.getElementById('fldDate').value = s.date || '';
+        document.getElementById('fldYearMonth').value = s.yearMonth || '';
+        document.getElementById('fldCompany').value = s.company || '';
+        document.getElementById('fldRemarks').value = s.remarks || '';
+      } catch (e) {}
+    }
+
+    function clearStorage() { try { localStorage.removeItem(STORAGE_KEY); } catch (e) {} }
+
+    // ===== Build payload =====
+    function buildPayload() {
+      const company = document.getElementById('fldCompany').value.trim();
+      const finalCompany = state.mode === 'ouen' ? normalizeCompanyClient(company) : company;
+      const summary = calculateSummary();
+      return {
+        mode: state.mode,
+        draftId: state.draftId,
+        date: document.getElementById('fldDate').value,
+        yearMonth: document.getElementById('fldYearMonth').value,
+        company: finalCompany,
+        companyOriginal: company,
+        remarks: document.getElementById('fldRemarks').value,
+        details: state.details.map(d => ({
+          type: d.type,
+          tradeDate: d.tradeDate || '',
+          description: d.description || '',
+          qty: parseFloat(d.qty) || 0,
+          unitPrice: parseFloat(d.unitPrice) || 0,
+          amount: (parseFloat(d.qty) || 0) * (parseFloat(d.unitPrice) || 0),
+        })),
+        summary,
+      };
+    }
+
+    // ===== Validation =====
+    function validatePayload(p, forIssue) {
+      if (!p.date) return '請求日を入力してください';
+      if (!p.company) return '宛先会社名を入力してください';
+      if (forIssue) {
+        const valid = p.details.filter(d => d.qty > 0 && d.unitPrice > 0 && d.description);
+        if (valid.length === 0) return '明細を1行以上入力してください（数量・単価・摘要が必要）';
+      }
+      return null;
+    }
+
+    // ===== Save draft =====
+    function handleSaveDraft() {
+      const p = buildPayload();
+      const err = validatePayload(p, false);
+      if (err) { showToast(err, 'error'); return; }
+
+      if (!GAS_URL) {
+        state.draftId = state.draftId || ('local-' + Date.now());
+        saveToStorage();
+        showToast('（デモ）下書きを保存しました', 'success');
+        return;
+      }
+
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      document.getElementById('saveBtnIcon').innerHTML = '<div class="spinner-dark"></div>';
+      document.getElementById('saveBtnLabel').textContent = '保存中...';
+
+      fetch(GAS_URL + '?action=billingSaveDraft', { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(p) })
+        .then(r => r.json())
+        .then(d => {
+          if (d.success) {
+            state.draftId = d.draftId;
+            saveToStorage();
+            showToast('下書きを保存しました', 'success');
+          } else {
+            showToast(d.message || '保存に失敗しました', 'error');
+          }
+        })
+        .catch(() => showToast('通信エラー', 'error'))
+        .finally(() => {
+          btn.disabled = false;
+          document.getElementById('saveBtnIcon').textContent = '💾';
+          document.getElementById('saveBtnLabel').textContent = '一時保存';
+        });
+    }
+
+    // ===== Issue invoice =====
+    function handleIssue() {
+      const p = buildPayload();
+      const err = validatePayload(p, true);
+      if (err) { showToast(err, 'error'); return; }
+
+      if (!confirm(`【発行確認】\n${p.company} 宛 / ${p.yearMonth}分\n請求金額 ¥${p.summary.total.toLocaleString()}\n\nPDFを発行してメール送信します。よろしいですか？`)) return;
+
+      if (!GAS_URL) {
+        showResultModal({ invoiceNumber: '010-DEMO-001', pdfUrl: '#', total: p.summary.total, taxable: p.summary.taxable, tax: p.summary.tax }, p);
+        return;
+      }
+
+      const btn = document.getElementById('issueBtn');
+      btn.disabled = true;
+      document.getElementById('issueBtnIcon').innerHTML = '<div class="spinner-sm"></div>';
+      document.getElementById('issueBtnLabel').textContent = '発行中（PDF生成）...';
+
+      fetch(GAS_URL + '?action=billingIssue', { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(p) })
+        .then(r => r.json())
+        .then(d => {
+          if (d.success) {
+            showResultModal(d, p);
+            state.draftId = null;
+            clearStorage();
+            resetForm(false);
+          } else {
+            showToast(d.message || '発行に失敗しました', 'error');
+          }
+        })
+        .catch(() => showToast('通信エラー', 'error'))
+        .finally(() => {
+          btn.disabled = false;
+          document.getElementById('issueBtnIcon').textContent = '📄';
+          document.getElementById('issueBtnLabel').textContent = '請求書を発行';
+        });
+    }
+
+    // ===== Drafts modal =====
+    function openDraftsModal() {
+      const body = document.getElementById('draftsBody');
+      body.innerHTML = '<div class="draft-empty">読み込み中...</div>';
+      document.getElementById('draftsModal').classList.add('open');
+
+      if (!GAS_URL) { body.innerHTML = '<div class="draft-empty">（デモモード：下書きはサーバー保存されません）</div>'; return; }
+
+      fetch(GAS_URL + '?action=billingDrafts')
+        .then(r => r.json())
+        .then(d => {
+          if (!d.success) { body.innerHTML = '<div class="draft-empty">取得に失敗しました</div>'; return; }
+          if (!d.drafts || d.drafts.length === 0) { body.innerHTML = '<div class="draft-empty">保存中の下書きはありません</div>'; return; }
+          body.innerHTML = d.drafts.map(dr => `
+            <div class="draft-item">
+              <div class="draft-item-main" onclick="loadDraft('${dr.draftId}')">
+                <div class="draft-item-title">
+                  <span class="draft-tag ${dr.mode}">${dr.mode === 'jisha' ? '自社' : '応援'}</span>
+                  ${escapeHtml(dr.company || '(会社名未入力)')}
+                </div>
+                <div class="draft-item-meta">${escapeHtml(dr.yearMonth || '')} ・ 更新 ${escapeHtml(dr.updatedAt || '')} ・ ¥${(dr.total || 0).toLocaleString()}</div>
+              </div>
+              <div class="draft-item-actions">
+                <button class="draft-mini-btn" onclick="event.stopPropagation(); loadDraft('${dr.draftId}')">開く</button>
+                <button class="draft-mini-btn danger" onclick="event.stopPropagation(); deleteDraft('${dr.draftId}')">削除</button>
+              </div>
+            </div>
+          `).join('');
+        })
+        .catch(() => { body.innerHTML = '<div class="draft-empty">通信エラー</div>'; });
+    }
+
+    function closeDraftsModal() { document.getElementById('draftsModal').classList.remove('open'); }
+
+    function loadDraft(id) {
+      if (!GAS_URL) return;
+      fetch(GAS_URL + '?action=billingDraftLoad&id=' + encodeURIComponent(id))
+        .then(r => r.json())
+        .then(d => {
+          if (!d.success) { showToast(d.message || '読込失敗', 'error'); return; }
+          const dr = d.draft;
+          state.mode = dr.mode || 'jisha';
+          state.draftId = dr.draftId;
+          state.details = dr.details || [];
+          document.getElementById('fldDate').value = dr.date || '';
+          document.getElementById('fldYearMonth').value = dr.yearMonth || '';
+          document.getElementById('fldCompany').value = dr.company || '';
+          document.getElementById('fldRemarks').value = dr.remarks || '';
+          updateModeUI();
+          renderDetails();
+          saveToStorage();
+          closeDraftsModal();
+          showToast('下書きを読み込みました', 'info');
+        })
+        .catch(() => showToast('通信エラー', 'error'));
+    }
+
+    function deleteDraft(id) {
+      if (!confirm('この下書きを削除しますか？')) return;
+      fetch(GAS_URL + '?action=billingDeleteDraft', { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ draftId: id }) })
+        .then(r => r.json())
+        .then(d => {
+          if (d.success) { showToast('削除しました', 'success'); openDraftsModal(); }
+          else showToast(d.message || '削除失敗', 'error');
+        })
+        .catch(() => showToast('通信エラー', 'error'));
+    }
+
+    // ===== Result modal =====
+    function showResultModal(result, payload) {
+      document.getElementById('resultTitle').textContent = '請求書を発行しました';
+      document.getElementById('resultSubtitle').textContent = result.pdfUrl ? 'PDFをメール送信＆Driveに保存しました' : 'PDFを生成しました';
+      const list = document.getElementById('resultList');
+      list.innerHTML = `
+        <li><span>請求書番号</span><span>${escapeHtml(result.invoiceNumber || '-')}</span></li>
+        <li><span>宛先</span><span>${escapeHtml(payload.company)}</span></li>
+        <li><span>請求年月</span><span>${escapeHtml(payload.yearMonth)}</span></li>
+        <li><span>請求金額</span><span>¥${(result.total || payload.summary.total).toLocaleString()}</span></li>
+        ${result.pdfUrl ? `<li><span>PDF</span><span><a href="${result.pdfUrl}" target="_blank" style="color:var(--accent); text-decoration:none;">開く ↗</a></span></li>` : ''}
+      `;
+      document.getElementById('resultModal').classList.add('open');
+    }
+
+    function closeResultModal() { document.getElementById('resultModal').classList.remove('open'); }
+
+    // ===== Reset =====
+    function resetForm(confirmFirst) {
+      if (confirmFirst && !confirm('入力中の内容を破棄して新規作成しますか？（保存済の下書きは消えません）')) return;
+      state.draftId = null;
+      state.details = [];
+      const today = new Date();
+      document.getElementById('fldDate').value = formatDateInput(today);
+      document.getElementById('fldYearMonth').value = '';
+      document.getElementById('fldCompany').value = '';
+      document.getElementById('fldRemarks').value = '';
+      setDefaultRemarks();
+      updateYearMonth();
+      addRow('taxable');
+      addRow('exempt');
+      clearStorage();
+    }
+
+    // ===== Utils =====
+    function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+    function escapeAttr(s) { return escapeHtml(s).replace(/"/g, '&quot;'); }
+    function formatNumber(n) { return (Math.round(n || 0)).toLocaleString(); }
+
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.className = 'toast ' + (type || '');
+      document.getElementById('toastText').textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
+  </script>
+</body>
+</html>
