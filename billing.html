@@ -141,6 +141,15 @@
     .autocomplete-list.open { display: block; }
     .autocomplete-item { padding: 10px 14px; font-size: 14px; cursor: pointer; transition: 0.15s; }
     .autocomplete-item:hover, .autocomplete-item.highlighted { background: var(--bg-input); color: var(--accent); }
+    .autocomplete-item.autocomplete-other {
+      border-top: 1px solid var(--border-light);
+      color: var(--accent);
+      font-weight: 600;
+      background: rgba(224, 120, 48, 0.04);
+    }
+    .autocomplete-item.autocomplete-other:hover {
+      background: rgba(224, 120, 48, 0.12);
+    }
     .normalize-warn { font-size: 11px; color: var(--accent); margin-top: 4px; }
 
     /* Detail rows */
@@ -727,9 +736,25 @@
       } else {
         filtered = state.companies.filter(c => c.includes(q) || normalizeForMatch(c).includes(normalizeForMatch(q)));
       }
-      if (filtered.length === 0) { list.classList.remove('open'); saveToStorage(); return; }
-      list.innerHTML = filtered.slice(0, 30).map(c => `<div class="autocomplete-item" onmousedown="selectCompany('${escapeAttr(c)}')">${escapeHtml(c)}</div>`).join('');
+      const otherItem = `<div class="autocomplete-item autocomplete-other" onmousedown="selectOther()">＋ その他（新規入力）</div>`;
+      if (filtered.length === 0) {
+        list.innerHTML = otherItem;
+      } else {
+        list.innerHTML = filtered.slice(0, 30).map(c => `<div class="autocomplete-item" onmousedown="selectCompany('${escapeAttr(c)}')">${escapeHtml(c)}</div>`).join('') + otherItem;
+      }
       list.classList.add('open');
+      saveToStorage();
+    }
+
+    function selectOther() {
+      const inp = document.getElementById('fldCompany');
+      const list = document.getElementById('companyList');
+      inp.value = '';
+      list.classList.remove('open');
+      inp.focus();
+      const hint = document.getElementById('companyHint');
+      hint.textContent = '新しい会社名を直接入力してください';
+      hint.style.color = 'var(--accent)';
       saveToStorage();
     }
 
